@@ -36,7 +36,7 @@ class PaymentTransaction(models.Model):
         # Prepare the payload for checkout creation
         parts = self.reference.split("/")
         year = parts[1]
-        seq = parts[2]
+        seq = parts[2].split('-')[0]  # Remove retry suffix like -1, -2
         correlative = year + seq
         number = int(correlative)
 
@@ -199,3 +199,26 @@ class PaymentTransaction(models.Model):
         tx._process_webhook_data(notification_data)
         # tx._execute_callback()
         return tx
+
+    def action_check_payment_status(self):
+        """ Manually check the payment status from Recurrente API. """
+        self.ensure_one()
+        if self.provider_code != 'recurrente' or not self.id_recurrente_checkout:
+            _logger.warning(f"No checkout ID for transaction {self.reference}")
+            return
+
+        try:
+            _logger.info(f"Checking status for checkout {self.id_recurrente_checkout}")
+            checkout_data = self.provider_id._recurrente_make_request(f'checkouts/{self.id_recurrente_checkout}')
+            _logger.info(f"Checkout data: {checkout_data}")
+            status = checkout_data.get('status')
+            if status == 'paid':
+                self._set_done()
+            elif status == 'unpaid':
+                # Keep as is or set pending
+                pass
+            elif status == 'payment_in_progress':
+                self._set_pending()
+            # Add more status handling as needed
+        except Exception as e:
+            _logger.error(f"Error checking payment status for {self.id_recurrente_checkout}: {e}")

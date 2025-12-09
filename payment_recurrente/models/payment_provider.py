@@ -77,15 +77,23 @@ class PaymentProvider(models.Model):
                 _logger.exception(
                     f"Invalid API request at {url} with data:\n{pprint.pformat(payload)}"
                 )
+                try:
+                    error_msg = response.json().get('message', '')
+                except ValueError:
+                    error_msg = response.text
                 raise ValidationError("Recurrente: " + _(
-                    "The communication with the API failed. Recurrente gave us the following information: '%s'" % response.json().get('message', '')
+                    "The communication with the API failed. Recurrente gave us the following information: '%s'" % error_msg
                 ))
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
             _logger.exception(f"Unable to reach endpoint at {url}")
             raise ValidationError(
                 "Recurrente: " + _("Could not establish the connection to the API.")
             )
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            _logger.error(f"Non-JSON response from {url}: {response.text}")
+            raise ValidationError("Recurrente: " + _("Invalid response from API."))
 
     def _get_default_payment_method_codes(self):
         """ Override of `payment` to return the default payment method codes. """
