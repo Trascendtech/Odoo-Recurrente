@@ -33,58 +33,41 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'recurrente':
             return res
 
-        token = self.provider_id.recurrente_setup_token
-        if not token:
-            setup_data = self.provider_id._recurrente_make_request("setup")
-            token = setup_data["token"]
-            self.provider_id.recurrente_setup_token = token
-
-        headers = {
-            "X-Token": token,
-            "accept": "application/json",
-            "Content-Type": "application/json"
-        }
-
-        # Initiate the payment and retrieve the payment link data.
-        correlative = self.reference.split("-")[0][2:]
+        # Prepare the payload for checkout creation
+        parts = self.reference.split("/")
+        year = parts[1]
+        seq = parts[2]
+        correlative = year + seq
         number = int(correlative)
-        name_split = self.partner_name.split(" ", maxsplit=1)
-        name, surname = (name_split[0], name_split[1]) if len(name_split) > 1 else (name_split[0], "--")
-        
-        installments = ""
-        if self.provider_id.allow_installments:
-            installments = "|".join(inst.name for inst in self.provider_id.installment_ids)
+
+        # Build items array as per API
+        items = [{
+            'name': self.reference,  # Use reference as item name
+            'currency': self.currency_id.name,
+            'amount_in_cents': int(self.amount * 100),  # Convert to cents
+            'quantity': 1,
+        }]
 
         payload = {
-            'number': number,
-            'correlative': correlative,
-            'description': self.reference,
-            'amount': self.amount,
-            'currency': self.currency_id.name,
-            "allowTransfer": self.provider_id.allow_transfers,
-            "installments": installments,
-            'redirection': {
-                "successUrl": f"{self.get_base_url()}{RecurrenteController._request_url}?tx_ref={self.reference}&status=request_success",
-                "cancelUrl": f"{self.get_base_url()}{RecurrenteController._request_url}?tx_ref={self.reference}&status=request_cancel",
-            },
-            'billing': {
-                "name": name,
-                "surname": surname,
-                "taxid": self.partner_id.vat or "CF",
-                "email": self.partner_email,
-                "phone": self.partner_phone,
-                "address": self.partner_address or "Ciudad",
-            }
+            'items': items,
+            'success_url': f"{self.get_base_url()}{RecurrenteController._request_url}?tx_ref={self.reference}&status=request_success",
+            'cancel_url': f"{self.get_base_url()}{RecurrenteController._request_url}?tx_ref={self.reference}&status=request_cancel",
         }
-        payment_link_data = self.provider_id._recurrente_make_request('checkouts/hosted/single', headers=headers, payload=payload)
+
+        # Add metadata if needed
+        payload['metadata'] = {
+            'correlative': correlative,
+            'number': number,
+        }
+
+        payment_link_data = self.provider_id._recurrente_make_request('checkouts', payload=payload)
 
         self.id_recurrente_checkout = payment_link_data["id"]
-        self.product_recurrente_checkout = payment_link_data["product"]
-        self.url_recurrente_checkout = payment_link_data["url"]
+        self.url_recurrente_checkout = payment_link_data["checkout_url"]
 
         # Extract the payment link URL and embed it in the redirect form.
         rendering_values = {
-            'api_url': payment_link_data['url'],
+            'api_url': payment_link_data['checkout_url'],
         }
         return rendering_values
 
@@ -152,19 +135,16 @@ class PaymentTransaction(models.Model):
         :return: The transaction, if found.
         :rtype: recordset of `payment.transaction`
         """
-        
+
         checkout = notification_data.get('checkout')
-        product = notification_data.get('product')
-
         checkout_id = checkout.get('id') if checkout else False
-        product_id = product.get('id') if product else False
-        if not checkout_id or not product_id:
-            raise ValidationError("Recurrente: " + _("Received data with missing reference."))
+        if not checkout_id:
+            raise ValidationError("Recurrente: " + _("Received data with missing checkout ID."))
 
-        tx = self.search([('id_recurrente_checkout', '=', checkout_id), ('product_recurrente_checkout', '=', product_id), ('provider_code', '=', 'recurrente')])
+        tx = self.search([('id_recurrente_checkout', '=', checkout_id), ('provider_code', '=', 'recurrente')])
         if not tx:
             raise ValidationError(
-                "Recurrente: " + _(f"No transaction found matching reference {checkout_id} and {product_id}.")
+                "Recurrente: " + _(f"No transaction found matching checkout ID {checkout_id}.")
             )
         return tx
 

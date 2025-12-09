@@ -8,8 +8,8 @@ DEFAULT_PAYMENT_METHODS_CODES = [
 ]
 
 PAYMENT_STATUS_MAPPING = {
-    'pending': ('request_success', 'bank_transfer_intent.pending', 'payment_intent.failed',),
-    'done': ('bank_transfer_intent.succeeded', 'payment_intent.succeeded',),
-    'cancel': ('request_cancel',),
+    'pending': ('bank_transfer_intent.pending', 'payment_intent.failed', 'subscription.past_due'),
+    'done': ('bank_transfer_intent.succeeded', 'payment_intent.succeeded', 'subscription.create'),
+    'cancel': ('request_cancel', 'subscription.cancel', 'setup_intent.cancelled'),
     'error': ('bank_transfer_intent.failed',),
 }

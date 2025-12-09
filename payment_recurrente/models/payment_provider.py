@@ -58,12 +58,14 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
 
-        url = url_join('https://aurora.codingtipi.com/pay/v2/recurrente/', endpoint)
-        if not payload:
-            payload = {
-                "publicKey": self.recurrente_public_key,
-                "secretKey": self.recurrente_secret_key,
-            }
+        url = url_join('https://app.recurrente.com/api/', endpoint)
+        # Set authentication headers
+        auth_headers = {
+            "X-PUBLIC-KEY": self.recurrente_public_key,
+            "X-SECRET-KEY": self.recurrente_secret_key,
+        }
+        headers.update(auth_headers)
+
         try:
             if method == 'GET':
                 response = requests.get(url, params=payload, headers=headers, timeout=10)
@@ -76,7 +78,7 @@ class PaymentProvider(models.Model):
                     f"Invalid API request at {url} with data:\n{pprint.pformat(payload)}"
                 )
                 raise ValidationError("Recurrente: " + _(
-                    "The communication with the API failed. Recurrente gave us the following information: '%s'" % response.json().get('message', '') 
+                    "The communication with the API failed. Recurrente gave us the following information: '%s'" % response.json().get('message', '')
                 ))
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
             _logger.exception(f"Unable to reach endpoint at {url}")
