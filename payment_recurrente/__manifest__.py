@@ -7,10 +7,10 @@
     'author': 'tipi(code)',
     'data': [
         'security/ir.model.access.csv',
+        'views/payment_recurrente_templates.xml',
         'data/payment_installment_data.xml',
         'data/payment_method_data.xml',
         'data/payment_provider_data.xml',
-        'views/payment_recurrente_templates.xml',
         'views/payment_provider_views.xml',
         'views/payment_transaction_view.xml',
     ],
