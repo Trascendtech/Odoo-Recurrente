@@ -209,16 +209,21 @@ class PaymentTransaction(models.Model):
 
         try:
             _logger.info(f"Checking status for checkout {self.id_recurrente_checkout}")
-            checkout_data = self.provider_id._recurrente_make_request(f'checkouts/{self.id_recurrente_checkout}')
+            checkout_data = self.provider_id._recurrente_make_request(
+                f"checkouts/{self.id_recurrente_checkout}", method="GET"
+            )
             _logger.info(f"Checkout data: {checkout_data}")
-            status = checkout_data.get('status')
-            if status == 'paid':
+            status = checkout_data.get("status")
+            if status == "paid":
                 self._set_done()
-            elif status == 'unpaid':
-                # Keep as is or set pending
+            elif status == "unpaid":
+                # If it's already pending, we don't need to do anything
+                # If it's still draft, it stays draft until paid or webhook
                 pass
-            elif status == 'payment_in_progress':
+            elif status == "payment_in_progress":
                 self._set_pending()
-            # Add more status handling as needed
+            # The API also returns 'expired' or 'canceled'
+            elif status in ["expired", "canceled"]:
+                self._set_canceled()
         except Exception as e:
             _logger.error(f"Error checking payment status for {self.id_recurrente_checkout}: {e}")

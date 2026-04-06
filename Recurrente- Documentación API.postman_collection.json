@@ -1,0 +1,4235 @@
+{
+	"info": {
+		"_postman_id": "a904e03c-cc18-405b-9319-29f43afd6a1a",
+		"name": "Recurrente: Documentación API",
+		"description": "La API de Recurrente te permite crear sesiones de compra, manejar tus productos, suscripciones, y clientes, hacer transferencias de dinero entre diferentes cuentas de Recurrente, y mucho más.\n\n## **Cómo empezar**\n\n- [Crea una cuenta](http://app.recurrente.com/bienvenida) en Recurrente.\n    \n- La API responde en formato JSON. Cuando retorna un error, el error es enviado en un _error key_ en JSON.\n    \n\n## Autenticación\n\nPara encontrar tus Llaves de API, dentro de tu cuenta de Recurrente, ve a:\n\n**Configuración** → **Llaves API.**\n\nPara autenticarte, debes enviar los siguientes headers en cada request:\n\n| Header | Description |\n| --- | --- |\n| `X-PUBLIC-KEY` | tu_llave_publica |\n| `X-SECRET-KEY` | tu_llave_privada |\n\n### Error en la autenticación\n\nSi tus llaves de API no se están enviando o son inválidas, recibirás un código de respuesta HTTP 401 Unauthorized.\n\n### Sandbox y pagos de prueba\n\nExisten dos formas de realizar pruebas: usando el **ambiente Sandbox** o haciendo pruebas directamente en **producción**, dependiendo del tipo de validación que necesites.\n\n#### ✅ Ambiente Sandbox\n\nEl ambiente Sandbox permite hacer pagos de prueba sin generar actividad real. Para utilizarlo:\n\n- Usa tus llaves de ambiente **TEST**.\n    \n- Simula un pago exitoso con la tarjeta **4242 4242 4242 4242**.\n    \n\nLos checkouts creados con llaves TEST:\n\n- Muestran un aviso que dice **\"PRUEBA\"** en el link de pago.\n    \n- Tienen el atributo `live_mode = false`.\n    \n- **No** crean actividad en la cuenta ni afectan el balance.\n    \n- **No** disparan webhooks.\n    \n\n> Este ambiente es ideal para pruebas durante la integración inicial o desarrollo. \n  \n\n#### ⚠️ Pruebas en producción\n\nTambién es posible realizar pruebas en ambiente **LIVE** con tus llaves de producción. En estos casos:\n\n- Se recomienda **reembolsar los pagos de prueba el mismo día**, ya sea desde el panel de Recurrente o mediante la API en `/api/refunds`.\n    \n- Los pagos reembolsados el mismo día son reembolsados al **100% del monto**.\n    \n\n> Esta opción permite validar el flujo completo, incluyendo actividad en cuenta, webhooks y conciliación. \n  \n\n### **¿Necesitas ayuda?**\n\n- Si estás usando Wordpress, te recomendamos que utilices [nuestro plugin](https://ayuda.recurrente.com/es/articles/8971522-como-instalo-el-plugin-de-recurrente-en-woocommerce).\n    \n- Únete y pregunta en nuestro [Discord](https://discord.gg/QhKPEkSKp2).\n    \n- O envíanos un correo a [soporte@recurrente.com](https://mailto:soporte@recurrente.com)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49773933",
+		"_collection_link": "https://javierjosecarpio-5362537.postman.co/workspace/c450e275-1f82-4ed0-96ba-db0524b417f3/collection/49773933-a904e03c-cc18-405b-9319-29f43afd6a1a?action=share&source=collection_link&creator=49773933"
+	},
+	"item": [
+		{
+			"name": "Prueba tu autenticación",
+			"item": [
+				{
+					"name": "Test",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://app.recurrente.com/api/test",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"test"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "hola",
+									"value": "adios",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Incluye los headers de autenticación y un \"body\" vacío, y recibe una respuesta con el nombre de tu cuenta.\n\n``` json\n{}\n\n ```"
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://app.recurrente.com/api/test",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"test"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Hello La Surf Office 🌎\"\n}"
+						},
+						{
+							"name": "Respuesta fallida",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://app.recurrente.com/api/test",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"test"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Autenticación Errónea 👀\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Envía un request de prueba para confirmar que tu autenticación está funcionando correctamente."
+		},
+		{
+			"name": "Checkouts",
+			"item": [
+				{
+					"name": "Create a checkout (item details)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "items[][name]",
+									"value": "One Ripe Banana",
+									"description": "El nombre del producto.",
+									"type": "text"
+								},
+								{
+									"key": "items[][currency]",
+									"value": "GTQ",
+									"description": "La moneda a cobrar.\n\nPosibles valores son:\n- GTQ\n- USD",
+									"type": "text"
+								},
+								{
+									"key": "items[][amount_in_cents]",
+									"value": "3000",
+									"description": "Monto a cobrar en centavos.",
+									"type": "text"
+								},
+								{
+									"key": "items[][image_url]",
+									"value": "https://www.sourcesplash.com/explore/food",
+									"description": "(Opcional) URL de la imagen del producto.",
+									"type": "text"
+								},
+								{
+									"key": "items[][quantity]",
+									"value": "1",
+									"description": "(Opcional) Cantidad. \n\nSi no incluyes una, el default es 1.\n\nEl valor mínimo es 1 y el valor máximo es 9.",
+									"type": "text"
+								},
+								{
+									"key": "items[][has_dynamic_pricing]",
+									"value": "false",
+									"description": "(Opcional) Indica si el producto debe usar precio dinámico. El precio se convierte en el \"monto a recibir\" neto por el comercio. Disponible solo para pagos únicos.",
+									"type": "text"
+								},
+								{
+									"key": "success_url",
+									"value": "https://www.google.com",
+									"description": "(Opcional) URL a dónde dirigir al comprador después de un pago exitoso.",
+									"type": "text"
+								},
+								{
+									"key": "cancel_url",
+									"value": "https://www.amazon.com",
+									"description": "(Opcional) URL a dónde dirigir al comprador cuando abandona el checkout.",
+									"type": "text"
+								},
+								{
+									"key": "user_id",
+									"value": "us_123456",
+									"description": "(Opcional) ID del usuario a quien pertenece el checkout. Prepopula los campos de información de usuario (Nombre, Email, etc.)",
+									"type": "text"
+								},
+								{
+									"key": "metadata",
+									"value": "{}",
+									"description": "(Opcional) Puedes utilizar metadata para almacenar información estructurada adicional sobre un producto.\n\nPuedes especificar hasta 50 keys, con nombres de hasta 40 caracteres y valores de hasta 500 caracteres.",
+									"type": "text"
+								},
+								{
+									"key": "expires_at",
+									"value": "",
+									"description": "(Opcional) Fecha en la que quieres que el checkout expire, en formato ISO 8601. Por ejemplo: \"2050-05-15T13:45:30Z\"\n",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/checkouts/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"checkouts",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"name": "Content-Type",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"items\": [\n    {\n      \"name\": \"One Ripe Banana\",\n      \"currency\": \"GTQ\",\n      \"amount_in_cents\": 3000,\n      \"image_url\": \"https://source.unsplash.com/400x400/?banana\",\n      \"quantity\": 1\n    }\n  ],\n  \"success_url\": \"https://www.google.com\",\n  \"cancel_url\": \"https://www.amazon.com\",\n  \"user_id\": \"us_123456\",\n  \"metadata\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/checkouts",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"checkouts"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"ch_eegw9j5zgqoae3ms\",\n    \"checkout_url\": \"https://app.recurrente.com/checkout-session/ch_eegw9j5zgqoae3ms\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create a checkout (item details: subscription)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "items[][name]",
+									"value": "Membersía Gold",
+									"description": "El nombre de la suscripción.",
+									"type": "text"
+								},
+								{
+									"key": "items[][currency]",
+									"value": "GTQ",
+									"description": "La moneda a cobrar.\n\nPosibles valores son:\n- GTQ\n- USD",
+									"type": "text"
+								},
+								{
+									"key": "items[][amount_in_cents]",
+									"value": "3000",
+									"description": "Monto a cobrar en centavos.",
+									"type": "text"
+								},
+								{
+									"key": "items[][image_url]",
+									"value": "https://source.unsplash.com/400x400/?banana",
+									"description": "(Opcional) URL de la imagen del producto.",
+									"type": "text"
+								},
+								{
+									"key": "items[][quantity]",
+									"value": "1",
+									"description": "(Opcional) Cantidad. \n\nSi no incluyes una, el default es 1.\n\nEl valor mínimo es 1 y el valor máximo es 9.",
+									"type": "text"
+								},
+								{
+									"key": "success_url",
+									"value": "https://www.google.com",
+									"description": "(Opcional) URL a dónde dirigir al comprador después de un pago exitoso.",
+									"type": "text"
+								},
+								{
+									"key": "cancel_url",
+									"value": "https://www.amazon.com",
+									"description": "(Opcional) URL a dónde dirigir al comprador cuando abandona el checkout.",
+									"type": "text"
+								},
+								{
+									"key": "user_id",
+									"value": "us_123456",
+									"description": "(Opcional) ID del usuario a quien pertenece el checkout. Prepopula los campos de información de usuario (Nombre, Email, etc.)",
+									"type": "text"
+								},
+								{
+									"key": "metadata",
+									"value": "{}",
+									"description": "(Opcional) Puedes utilizar metadata para almacenar información estructurada adicional sobre un producto.\n\nPuedes especificar hasta 50 keys, con nombres de hasta 40 caracteres y valores de hasta 500 caracteres.",
+									"type": "text"
+								},
+								{
+									"key": "items[][charge_type]",
+									"value": "recurring",
+									"description": "Tipo de cargo: recurrente",
+									"type": "text"
+								},
+								{
+									"key": "items[][billing_interval]",
+									"value": "month",
+									"description": "Intervalo de tiempo de pago\nOpciones:\n- week\n- month\n- year",
+									"type": "text"
+								},
+								{
+									"key": "items[][billing_interval_count]",
+									"value": "1",
+									"description": "Cantidad de intervalos de pago",
+									"type": "text"
+								},
+								{
+									"key": "items[][periods_before_automatic_cancellation]",
+									"value": "12",
+									"description": "(Opcional) Periodos a cobrar antes de que se cancele automáticamente",
+									"type": "text"
+								},
+								{
+									"key": "items[][free_trial_interval]",
+									"value": "month",
+									"description": "(Opcional) Intervalo de período de prueba\nOpciones:\n- week\n- month\n- year",
+									"type": "text"
+								},
+								{
+									"key": "items[][free_trial_interval_count]",
+									"value": "1",
+									"description": "(Opcional) Cantidad de intervalos de período de prueba",
+									"type": "text"
+								},
+								{
+									"key": "items[][has_dynamic_pricing]",
+									"value": "true",
+									"description": "(Opcional) El precio cambia dependiendo del método de pago que elige el cliente — Tú recibes el monto a cobrar completo. Todos los métodos de pago se activan. Funciona solo para pagos únicos.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/checkouts/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"checkouts",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"items\": [\n        {\n            \"name\": \"Membresia Gold\",\n            \"description\": \"Suscripción con un mes de prueba\",\n            \"currency\": \"GTQ\",\n            \"amount_in_cents\": 5000,\n            \"charge_type\": \"recurring\",\n            \"image_url\": \"https://source.unsplash.com/400x400/?banana\",\n            \"custom_terms_and_conditions\": \"Terminos y condiciones\",\n            \"billing_interval_count\": 1,\n            \"billing_interval\": \"month\",\n            \"periods_before_automatic_cancellation\": 12,\n            \"free_trial_interval_count\": 1,\n            \"free_trial_interval\": \"month\",\n            \"metadata\": {}\n        }\n    ],\n    \"success_url\": \"https://www.google.com\",\n    \"cancel_url\": \"https://www.amazon.com\",\n    \"metadata\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/checkouts",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"checkouts"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"ch_eegw9j5zgqoae3ms\",\n    \"checkout_url\": \"https://app.recurrente.com/checkout-session/ch_eegw9j5zgqoae3ms\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create a checkout (Product ID)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "items[][product_id]",
+									"value": "prod_1234567",
+									"description": "Crea un producto primero, y luego utiliza el ID del producto.",
+									"type": "text"
+								},
+								{
+									"key": "success_url",
+									"value": "https://www.google.com",
+									"description": "(Opcional) URL a dónde dirigir al comprador después de un pago exitoso.",
+									"type": "text"
+								},
+								{
+									"key": "cancel_url",
+									"value": "https://www.amazon.com",
+									"description": "(Opcional) URL a dónde dirigir al comprador cuando abandona el checkout.",
+									"type": "text"
+								},
+								{
+									"key": "user_id",
+									"value": "us_123456",
+									"description": "(Opcional) ID del usuario a quien pertenece el checkout. Prepopula los campos de información de usuario (Nombre, Email, etc.)",
+									"type": "text"
+								},
+								{
+									"key": "metadata",
+									"value": "{}",
+									"description": "(Opcional) Puedes utilizar metadata para almacenar información estructurada adicional sobre un producto.\n\nPuedes especificar hasta 50 keys, con nombres de hasta 40 caracteres y valores de hasta 500 caracteres.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/checkouts/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"checkouts",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"items\": [\n    {\n       \"product_id\": \"prod_123456\"\n    }\n  ],\n  \"metadata\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/checkouts",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"checkouts"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"ch_eegw9j5zgqoae3ms\",\n    \"checkout_url\": \"https://app.recurrente.com/checkout-session/ch_eegw9j5zgqoae3ms\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update a checkout",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "success_url",
+									"value": "https://www.google.com",
+									"description": "(Opcional) URL a dónde dirigir al comprador después de un pago exitoso.",
+									"type": "text"
+								},
+								{
+									"key": "cancel_url",
+									"value": "https://www.amazon.com",
+									"description": "(Opcional) URL a dónde dirigir al comprador cuando abandona el checkout.",
+									"type": "text"
+								},
+								{
+									"key": "metadata",
+									"value": "{ \"internalID: 123 }",
+									"description": "(Opcional) Puedes utilizar metadata para almacenar información estructurada adicional sobre un producto.\n\nPuedes especificar hasta 50 keys, con nombres de hasta 40 caracteres y valores de hasta 500 caracteres.",
+									"type": "text"
+								},
+								{
+									"key": "expires_at",
+									"value": " \"2050-05-15T13:45:30Z\"",
+									"description": "(Opcional) Fecha en la que quieres que el checkout expire, en formato ISO 8601. Por ejemplo: \"2050-05-15T13:45:30Z\"\n",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/checkouts/{{checkoutId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"checkouts",
+								"{{checkoutId}}"
+							]
+						},
+						"description": "## Descripción del Endpoint\n\nEste endpoint permite actualizar un checkout existente en la plataforma de Recurrente. Solo se permiten ediciones a checkouts que **no han sido pagados**, en los campos a continuación."
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"items\": [\n    {\n      \"name\": \"One Ripe Banana\",\n      \"currency\": \"GTQ\",\n      \"amount_in_cents\": 3000,\n      \"image_url\": \"https://source.unsplash.com/400x400/?banana\",\n      \"quantity\": 1\n    }\n  ],\n  \"success_url\": \"https://www.google.com\",\n  \"cancel_url\": \"https://www.amazon.com\",\n  \"user_id\": \"us_123456\",\n  \"metadata\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/checkouts",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"checkouts"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"ch_eegw9j5zgqoae3ms\",\n    \"status\": \"unpaid\",\n    \"payment\": null,\n    \"payment_method\": null,\n    \"transfer_setups\": [],\n    \"metadata\": {\n        \"internalID\": 123\n    },\n    \"expires_at\": \"2050-05-15T13:45:30Z\",\n    \"success_url\": \"https://google.com\",\n    \"cancel_url\": \"https://amazon.com\",\n    \"created_at\": \"2025-05-15T13:45:30Z\",\n    \"total_in_cents\": \"500\",\n    \"currency\": \"GTQ\",\n    \"latest_intent\": { \n        \"id\": \"pa_123\", \n        \"created_at\": \"2025-05-15T13:45:30Z\",\n        \"type\": \"PaymentIntent\", \n        data: { \n            \"auth_code\": \"123456\" \n        } \n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get a checkout",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/checkouts/{{checkoutId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"checkouts",
+								"{{checkoutId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "No pagado",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "items[][name]",
+											"value": "One Ripe Banana",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][currency]",
+											"value": "GTQ",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][amount_in_cents]",
+											"value": "3000",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][image_url]",
+											"value": "https://source.unsplash.com/400x400/?banana",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][quantity]",
+											"value": "1",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "mode",
+											"value": "setup",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/checkouts/{{checkoutId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"checkouts",
+										"{{checkoutId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"ch_eegw9j5zgqoae3ms\",\n    \"status\": \"unpaid\",\n    \"payment\": null,\n    \"payment_method\": null,\n    \"transfer_setups\": [],\n    \"metadata\": {},\n    \"expires_at\": \"2050-05-15T13:45:30Z\",\n    \"success_url\": \"https://google.com\",\n    \"cancel_url\": \"https://amazon.com\",\n    \"created_at\": \"2025-05-15T13:45:30Z\",\n    \"total_in_cents\": \"500\",\n    \"currency\": \"GTQ\",\n    \"latest_intent\": null\n}"
+						},
+						{
+							"name": "Pagado, pago único",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "items[][name]",
+											"value": "One Ripe Banana",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][currency]",
+											"value": "GTQ",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][amount_in_cents]",
+											"value": "3000",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][image_url]",
+											"value": "https://source.unsplash.com/400x400/?banana",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][quantity]",
+											"value": "1",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "mode",
+											"value": "setup",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/checkouts/ch_d33gcgfpa8cz4pot",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"checkouts",
+										"ch_d33gcgfpa8cz4pot"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"ch_d33gcgfpa8cz4pot\",\n    \"status\": \"paid\",\n    \"payment\": {\n        \"id\": \"pa_xnoesqzm\",\n        \"paymentable\": {\n            \"type\": \"OneTimePayment\",\n            \"id\": \"on_dlc21zwk\",\n            \"tax_name\": null,\n            \"tax_id\": null\n        }\n    },\n    \"payment_method\": {\n        \"id\": \"pay_m_ru4ztzg3\",\n        \"type\": \"card\",\n        \"card\": {\n            \"last4\": \"4242\",\n            \"network\": \"visa\"\n        }\n    },\n    \"transfer_setups\": [],\n    \"metadata\": {},\n    \"expires_at\": \"2050-05-15T13:45:30Z\",\n    \"success_url\": \"https://google.com\",\n    \"cancel_url\": \"https://amazon.com\",\n    \"created_at\": \"2025-05-15T13:45:30Z\",\n    \"total_in_cents\": \"500\",\n    \"currency\": \"GTQ\",\n    \"latest_intent\": { \n        \"id\": \"pa_123\", \n        \"created_at\": \"2025-05-15T13:45:30Z\",\n        \"type\": \"PaymentIntent\", \n        data: { \n            \"auth_code\": \"123456\" \n        } \n    }\n}"
+						},
+						{
+							"name": "Pagado, Inicio de una suscripción",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "items[][name]",
+											"value": "One Ripe Banana",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][currency]",
+											"value": "GTQ",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][amount_in_cents]",
+											"value": "3000",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][image_url]",
+											"value": "https://source.unsplash.com/400x400/?banana",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "items[][quantity]",
+											"value": "1",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "mode",
+											"value": "setup",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/checkouts/{{checkoutId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"checkouts",
+										"{{checkoutId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"ch_lmgbvesmihkqzma3\",\n    \"status\": \"paid\",\n    \"payment\": {\n        \"id\": \"pa_ttfeprgn\",\n        \"paymentable\": {\n            \"type\": \"Subscription\",\n            \"id\": \"su_nehndm7j\",\n            \"tax_name\": null,\n            \"tax_id\": null\n        }\n    },\n    \"payment_method\": {\n        \"id\": \"pay_m_ru4ztzg3\",\n        \"type\": \"card\",\n        \"card\": {\n            \"last4\": \"4242\",\n            \"network\": \"visa\"\n        }\n    },\n    \"transfer_setups\": [],\n    \"metadata\": {},\n    \"expires_at\": \"2050-05-15T13:45:30Z\",\n    \"success_url\": \"https://google.com\",\n    \"cancel_url\": \"https://amazon.com\",\n    \"created_at\": \"2025-05-15T13:45:30Z\",\n    \"total_in_cents\": \"500\",\n    \"currency\": \"GTQ\",\n    \"latest_intent\": { \n        \"id\": \"pa_123\", \n        \"created_at\": \"2025-05-15T13:45:30Z\",\n        \"type\": \"PaymentIntent\", \n        data: { \n            \"auth_code\": \"123456\" \n        } \n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get all checkouts",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/checkouts?from_time=2050-05-15T13:45:30Z&until_time=2050-05-15T13:45:30Z&user_id=us_123&page=1&items=20",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"checkouts"
+							],
+							"query": [
+								{
+									"key": "from_time",
+									"value": "2050-05-15T13:45:30Z",
+									"description": "(Opcional) Fecha y hora a partir de la cual quieres filtrar los checkouts, en formato ISO 8601. Por ejemplo: \"2024-05-15T13:45:30Z\"."
+								},
+								{
+									"key": "until_time",
+									"value": "2050-05-15T13:45:30Z",
+									"description": "(Opcional) Fecha y hora hasta la cual quieres filtrar los checkouts, en formato ISO 8601. Por ejemplo: \"2024-05-15T13:45:30Z\""
+								},
+								{
+									"key": "user_id",
+									"value": "us_123",
+									"description": "(Opcional) ID del usuario para filtrar los checkouts asociados a él. Por ejemplo: \"us_123\"."
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "(Opcional) Número de página actual que deseas visualizar. "
+								},
+								{
+									"key": "items",
+									"value": "20",
+									"description": "(Opcional) Cantidad de elementos que se deben mostrar por página."
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/checkouts?from_time=2024-05-15T13:45:30Z&until_time=2050-05-15T13:45:30Z&user_id=us_123",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"checkouts"
+									],
+									"query": [
+										{
+											"key": "from_time",
+											"value": "2024-05-15T13:45:30Z"
+										},
+										{
+											"key": "until_time",
+											"value": "2050-05-15T13:45:30Z"
+										},
+										{
+											"key": "user_id",
+											"value": "us_123"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "[{\n    \"id\": \"ch_lmgbvesmihkqzma3\",\n    \"status\": \"paid\",\n    \"payment\": {\n        \"id\": \"pa_ttfeprgn\",\n        \"paymentable\": {\n            \"type\": \"Subscription\",\n            \"id\": \"su_nehndm7j\",\n            \"tax_name\": null,\n            \"tax_id\": null\n        }\n    },\n    \"payment_method\": {\n        \"id\": \"pay_m_ru4ztzg3\",\n        \"type\": \"card\",\n        \"card\": {\n            \"last4\": \"4242\",\n            \"network\": \"visa\"\n        }\n    },\n    \"transfer_setups\": [],\n    \"metadata\": {},\n    \"expires_at\": \"2050-05-15T13:45:30Z\",\n    \"success_url\": \"https://google.com\",\n    \"cancel_url\": \"https://amazon.com\",\n    \"created_at\": \"2025-05-15T13:45:30Z\",\n    \"total_in_cents\": \"500\",\n    \"currency\": \"GTQ\",\n    \"latest_intent\": { \n        \"id\": \"pa_123\", \n        \"created_at\": \"2025-05-15T13:45:30Z\",\n        \"type\": \"PaymentIntent\", \n        data: { \n            \"auth_code\": \"123456\" \n        } \n    }\n}]"
+						}
+					]
+				}
+			],
+			"description": "###### ¿Qué es un Checkout?\n\nUn `Checkout` te entrega un link a una página de compra a la cuál debes redirigir a tu usuario.\n\nPuedes usar checkouts para:\n\n- Un pago único\n    \n- Iniciar una suscripción\n    \n\n###### ¿Cómo determinar el monto a pagar en un Checkout?\n\nExisten dos formas de determinar el monto en un checkout:\n\n1. Creando los \"items\" que quiero añadir al checkout directo desde el request.\n    \n2. Pasando el \"Price ID\" de los productos que quiero añadir.\n    \n\nEn esta sección encontrarás ejemplos de ambos casos.\n\n###### ¿Cómo saber si el usuario ya completó el pago?\n\nPara saber si el usuario ya completó el pago, tú puedes revisar el estado de la compra de dos maneras:\n\n- Utilizando [webhooks](https://documenter.getpostman.com/view/10340859/2sA2rFQf5R#785a531d-b59d-4943-b9e8-26119a1aed7c) **(recomendada)**.\n    \n- Llamando a \"GET Checkout\" con el ID del checkout, y revisando el estado ahí.\n    \n\n###### ¿Cómo hacer un pago de prueba?\n\nPara hacer pagos de prueba, utiliza tus llaves de ambiente **TEST.** Para realizar un pago exitoso, debes utilizar la tarjeta 4242 4242 4242 4242.\n\nCheckouts creados con llaves test serán diferentes a los checkouts LIVE de las siguientes maneras:\n\n- Tendrán un aviso que dirá \"PRUEBA\" en el link de pago.\n    \n- Tendrán el atributo `live_mode = false`.\n    \n- No crearán actividad en la cuenta, ni incrementarán el balance.\n    \n- No se enviarán webhooks.\n    \n\n###### Customizar métodos de pago\n\nPara customizar métodos de pago:\n\n- Debe ir incluido `custom_payment_method_settings: true`, de lo contrario, el producto regresa a utilizar los defaults de la cuenta.\n    \n- Para no ofrecer cuotas, `available_installments` debe ser un array vacío `[]`\n    \n\nEjemplo:\n\n``` json\n{ \n  \"product\": { \n    \"name\": \"El nombre del producto\",\n    \"custom_payment_method_settings\": \"true\",\n    \"card_payments_enabled\": \"true\",\n    \"bank_transfer_payments_enabled\": \"true\",\n    \"available_installments\": [3, 6, 12, 18],\n    \"prices_attributes\": [\n      { \n        \"amount_in_cents\": \"10000\",\n        \"charge_type\": \"one_time\",\n        \"currency\": \"GTQ\"\n      }\n    ]\n  }\n}\n\n ```\n\n###### Expirar un checkout\n\nPuedes expirar un checkout utilizando el atributo de `expires_at`.\n\nPuedes ponerle una fecha futura (fecha y hora en la que va a expirar), o una fecha pasada (para que se expire instantáneamente).\n\n###### Customizar apariencia\n\nCustomiza la apariencia de tus checkouts desde **Ajustes -> Tienda -> Apariencia.**\n\nPodrás añadir _color de fondo,_ _color de acento,_ y escoger la Fuente (tipografía) que quieras."
+		},
+		{
+			"name": "Payment Intents",
+			"item": [
+				{
+					"name": "Update a payment intent",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "payment_intent[tax_invoice_url]",
+									"value": "\"https://example.com/factura123\"",
+									"description": "El URL de la factura electrónica",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/payment_intents/{{paymentIntentId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"payment_intents",
+								"{{paymentIntentId}}"
+							]
+						},
+						"description": "Para actualizar la factura de un pago, debés pasar el parámetro de `tax_invoice_url`, como se muestra en el ejemplo."
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"name": "Content-Type",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"payment_intent\": {\n        \"tax_invoice_url\": \"https://www.example.com/factura123\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/invoices/{{invoiceId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"invoices",
+										"{{invoiceId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n  \"id\": \"pa_123\",\n  \"checkout\": {\n    \"id\": \"ch_123\"\n  },\n  \"api_version\": \"2024-04-24\",\n  \"created_at\": \"2023-09-27T09:07:25.119-06:00\",\n  \"failure_reason\": null,\n  \"customer_id\": \"us_123\",\n  \"amount_in_cents\": 500,\n  \"currency\": \"GTQ\",\n  \"fee\": 223,\n  \"vat_withheld\": 0,\n  \"vat_withheld_currency\": \"GTQ\",\n  \"product\": {\n    \"id\": \"prod_123\"\n  },\n  \"products\": [\n    {\n      \"id\": \"prod_123\",\n      \"status\": \"active\",\n      \"name\": \"Banana\",\n      \"description\": null,\n      \"success_url\": null,\n      \"cancel_url\": null,\n      \"custom_terms_and_conditions\": null,\n      \"phone_requirement\": \"none\",\n      \"address_requirement\": \"none\",\n      \"billing_info_requirement\": \"optional\",\n      \"prices\": [\n        {\n          \"id\": \"price_123\",\n          \"amount_in_cents\": 500,\n          \"currency\": \"GTQ\",\n          \"billing_interval_count\": 0,\n          \"billing_interval\": \"\",\n          \"charge_type\": \"one_time\",\n          \"periods_before_automatic_cancellation\": null,\n          \"free_trial_interval_count\": 0,\n          \"free_trial_interval\": \"\"\n        }\n      ],\n      \"storefront_link\": \"app.recurrente.com/s/surf-office/banana\",\n      \"metadata\": {}\n    }\n  ],\n  \"customer\": {\n    \"id\": \"us_123\",\n    \"email\": \"dev@example.com\",\n    \"full_name\": \"Mario Bros\"\n  },\n  \"payment\": {\n    \"id\": \"pa_123\",\n    \"paymentable\": {\n      \"type\": \"OneTimePayment\",\n      \"id\": \"on_ekhaj3ps\",\n      \"tax_name\": \"\",\n      \"tax_id\": \"\",\n      \"address\": null,\n      \"phone_number\": null\n    }\n  },\n  \"tax_invoice_url\": \"https://www.example.com/factura123\"\n}\n"
+						}
+					]
+				}
+			],
+			"description": "Un _PaymentIntent_ representa el proceso de recopilar un pago de tu cliente. Puedes usar el _PaymentIntent_ más adelante para guardar información relacionada con la venta, como el URL de la factura.\n\nUn _PaymentIntent_ pasa por múltiples estados a lo largo de su vida útil mientras se realizan flujos de autenticación, recopila el pago y, finalmente, crea como máximo un cargo exitoso.\n\nPara generar tu factura automáticamente, intégrate con un proveedor como [Tributax.](https://conexion.tributax.app/?i=recurrente)"
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Create a product (one time payment)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "product[name]",
+									"value": "El nombre de tu producto",
+									"description": "El nombre del producto.",
+									"type": "text"
+								},
+								{
+									"key": "product[description]",
+									"value": "La descripción es opcional",
+									"description": "(Opcional)\n",
+									"type": "text"
+								},
+								{
+									"key": "product[image_url]",
+									"value": "https://source.unsplash.com/400x400/?banana",
+									"description": "(Opcional) URL de la imagen del producto.",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][currency]]",
+									"value": "GTQ",
+									"description": "Posibles valores son:\n- GTQ\n- USD",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][charge_type]]",
+									"value": "one_time",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][amount_in_cents]]",
+									"value": "1000",
+									"description": "(Opcional) Cantidad. ",
+									"type": "text"
+								},
+								{
+									"key": "product[cancel_url]",
+									"value": "https://www.amazon.com/",
+									"description": "(Opcional) URL a dónde dirigir al comprador después de un pago exitoso.",
+									"type": "text"
+								},
+								{
+									"key": "product[success_url]",
+									"value": "https://www.google.com/",
+									"description": "(Opcional) URL a dónde dirigir al comprador cuando abandona el checkout.",
+									"type": "text"
+								},
+								{
+									"key": "product[custom_terms_and_conditions]",
+									"value": "El texto que tú quieras añadir.",
+									"description": "(Opcional)",
+									"type": "text"
+								},
+								{
+									"key": "product[phone_requirement]",
+									"value": "none",
+									"description": "Los valores posibles son:\n- required\n- optional\n- none",
+									"type": "text"
+								},
+								{
+									"key": "product[address_requirement]",
+									"value": "none",
+									"description": "(Opcional) Si deseas capturar dirección de entrega en el checkout. Los valores posibles son:\n- required\n- optional\n- none",
+									"type": "text"
+								},
+								{
+									"key": "product[billing_info_requirement]",
+									"value": "none",
+									"description": "(Opcional) Si deseas capturar NIT/Pasaporte en el checkout. Los valores posibles son:\n\n- required\n- optional\n- none",
+									"type": "text"
+								},
+								{
+									"key": "product[adjustable_quantity]",
+									"value": "true",
+									"description": "(Opcional) Esto determina si el comprador puede ajustar la cantidad de unidades a comprar de este producto.\n\nSi lo dejas en blanco, el valor es \"true\". Puedes cambiarlo a \"false\".",
+									"type": "text"
+								},
+								{
+									"key": "product[metadata]",
+									"value": "{}",
+									"description": "(Opcional) Puedes utilizar metadata para almacenar información estructurada adicional sobre un producto.\n\nPuedes especificar hasta 50 keys, con nombres  de hasta 40 caracteres y valores de hasta 500 caracteres.",
+									"type": "text"
+								},
+								{
+									"key": "product[inventory_quantity]",
+									"value": "",
+									"description": "(Opcional) Puedes dejarlo vacío si no quieres llevar una cantidad de inventario. Cada compra va reduciendo el inventario disponible, hasta que el producto llega a 0 disponible y se deshabilita.",
+									"type": "text"
+								},
+								{
+									"key": "product[has_dynamic_pricing]",
+									"value": "",
+									"description": "(Opcional) Añade precio dinámico. El precio se convierte en el \"monto a recibir\" neto por el comercio. Disponible solo para pagos únicos.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/products/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"products",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Ejemplo",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"name": "Content-Type",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"product\": {\n    \"name\": \"El nombre de tu producto\",\n    \"description\": \"La descripción es opcional\",\n    \"image_url\": \"https://source.unsplash.com/400x400/?banana\",\n    \"prices_attributes\": [\n      {\n        \"currency\": \"GTQ\",\n        \"charge_type\": \"one_time\",\n        \"amount_in_cents\": 500\n      }\n    ],\n    \"cancel_url\": \"https://www.amazon.com/\",\n    \"success_url\": \"https://www.google.com/\",\n    \"custom_terms_and_conditions\": \"El texto que tú quieras añadir.\",\n    \"phone_requirement\": \"none\",\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"none\"\n  },\n  \"adjustable_quantity\": true,\n  \"inventory_quantity\": null,\n  \"metadata\": {}\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/products/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"products",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"prod_9lstwgbr\",\n    \"status\": \"active\",\n    \"name\": \"El nombre de tu producto\",\n    \"description\": \"Descripción del producto\",\n    \"success_url\": \"https://www.google.com/\",\n    \"cancel_url\": \"https://www.amazon.com/\",\n    \"custom_terms_and_conditions\": \"Términos y condiciones\",\n    \"phone_requirement\": \"none\",\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"none\",\n    \"prices\": [\n        {\n            \"id\": \"price_rky4dog7\",\n            \"amount_in_cents\": 500,\n            \"currency\": \"GTQ\",\n            \"billing_interval_count\": 0,\n            \"billing_interval\": \"\",\n            \"charge_type\": \"one_time\",\n            \"periods_before_automatic_cancellation\": null,\n            \"free_trial_interval_count\": 0,\n            \"free_trial_interval\": \"\"\n        }\n    ],\n    \"storefront_link\": \"https://app.recurrente.com/s/surf-office/el-nombre-de-tu-producto\",\n    \"metadata\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "Create a product (subscription)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "product[name]",
+									"value": "El nombre de tu producto",
+									"description": "El nombre del producto.",
+									"type": "text"
+								},
+								{
+									"key": "product[description]",
+									"value": "La descripción es opcional",
+									"description": "(Opcional)\n",
+									"type": "text"
+								},
+								{
+									"key": "product[image_url]",
+									"value": "https://source.unsplash.com/400x400/?banana",
+									"description": "La moneda a cobrar.\n\nPosibles valores son:\n- GTQ\n- USD",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][currency]]",
+									"value": "GTQ",
+									"description": "Monto a cobrar en centavos.",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][charge_type]]",
+									"value": "recurring",
+									"description": "(Opcional) URL de la imagen del producto.",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][amount_in_cents]]",
+									"value": "1000",
+									"description": "(Opcional) Cantidad. \n\nSi no incluyes una, el default es 1.",
+									"type": "text"
+								},
+								{
+									"key": "product[cancel_url]",
+									"value": "https://www.amazon.com/",
+									"description": "(Opcional) URL a dónde dirigir al comprador después de un pago exitoso.",
+									"type": "text"
+								},
+								{
+									"key": "product[success_url]",
+									"value": "https://www.google.com/",
+									"description": "(Opcional) URL a dónde dirigir al comprador cuando abandona el checkout.",
+									"type": "text"
+								},
+								{
+									"key": "product[custom_terms_and_conditions]",
+									"value": "El texto que tú quieras añadir.",
+									"description": "(Opcional)",
+									"type": "text"
+								},
+								{
+									"key": "product[phone_requirement]",
+									"value": "none",
+									"description": "Los valores posibles son:\n- required\n- optional\n- none",
+									"type": "text"
+								},
+								{
+									"key": "product[address_requirement]",
+									"value": "none",
+									"description": "Los valores posibles son:\n- required\n- optional\n- none",
+									"type": "text"
+								},
+								{
+									"key": "product[billing_info_requirement]",
+									"value": "none",
+									"description": "Los valores posibles son:\n- optional\n- none",
+									"type": "text"
+								},
+								{
+									"key": "adjustable_quantity",
+									"value": "true",
+									"description": "(Opcional) Esto determina si el comprador puede ajustar la cantidad de unidades a comprar de este producto.\n\nSi lo dejas en blanco, el valor es \"true\". Puedes cambiarlo a \"false\".",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][billing_interval_count]]",
+									"value": "1",
+									"description": "Cada cuánto quieres cobrar la suscripción en número (e.g. 1 mes, 2 meses)",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][billing_interval]]",
+									"value": "month",
+									"description": "Qué plazo quieres usar para cobrar la suscripción. Los valores posibles son:\n- month\n- week\n- year",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][free_trial_interval_count]]",
+									"value": "1",
+									"description": "(Opcional) Cuánto quieres dar de periodo de prueba gratuito.",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][free_trial_interval]]",
+									"value": "month",
+									"description": "(Opcional) Qué plazo quieres usar para el período de prueba. Los valores posibles son:\n- month\n- week\n- year",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][periods_before_automatic_cancellation]]",
+									"value": "",
+									"description": "(Opcional) Cuántos periodos quieres que pasen antes de que la suscripción se cancele automáticamente. Si lo dejas en blanco, la suscripción se continuará conbrando indefinidamente.",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[][periods_before_allowed_to_cancel]]",
+									"value": "",
+									"description": "(Opcional) Cuántos periodos quieres que pasen antes de permitir que el cliente pueda cancelar su suscripción. Ojo, las suscripciones igual pueden cancelarse por falta de fondos en la tarjeta, tarjeta expirada, y otras razones.",
+									"type": "text"
+								},
+								{
+									"key": "metadata",
+									"value": "{}",
+									"description": "(Opcional) Puedes utilizar metadata para almacenar información estructurada adicional sobre un producto.\n\nPuedes especificar hasta 50 keys, con nombres  de hasta 40 caracteres y valores de hasta 500 caracteres.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/products/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"products",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"product\": {\n        \"name\": \"El nombre de tu producto\",\n        \"description\": \"Descripción del producto\",\n        \"success_url\": \"https://www.google.com/\",\n        \"cancel_url\": \"https://www.amazon.com/\",\n        \"custom_terms_and_conditions\": \"Términos y condiciones\",\n        \"phone_requirement\": \"none\",\n        \"address_requirement\": \"none\",\n        \"billing_info_requirement\": \"none\",\n        \"prices_attributes\": [\n            {\n                \"amount_in_cents\": 1000,\n                \"currency\": \"GTQ\",\n                \"billing_interval_count\": 1,\n                \"billing_interval\": \"month\",\n                \"charge_type\": \"recurring\",\n                \"periods_before_automatic_cancellation\": \"\",\n                \"free_trial_interval_count\": 1,\n                \"free_trial_interval\": \"month\"\n            }\n        ],\n        \"metadata\": {}\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/products/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"products",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"prod_vsyjzsqf\",\n    \"status\": \"active\",\n    \"name\": \"El nombre de tu producto\",\n    \"description\": \"Descripción del producto\",\n    \"success_url\": \"https://www.google.com/\",\n    \"cancel_url\": \"https://www.amazon.com/\",\n    \"custom_terms_and_conditions\": \"Términos y condiciones\",\n    \"phone_requirement\": \"none\",\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"none\",\n    \"prices\": [\n        {\n            \"id\": \"price_tnxd8fzw\",\n            \"amount_in_cents\": 1000,\n            \"currency\": \"GTQ\",\n            \"billing_interval_count\": 1,\n            \"billing_interval\": \"month\",\n            \"charge_type\": \"recurring\",\n            \"periods_before_automatic_cancellation\": null,\n            \"free_trial_interval_count\": 1,\n            \"free_trial_interval\": \"month\"\n        }\n    ],\n    \"storefront_link\": \"https://app.recurrente.com/s/surf-office/el-nombre-de-tu-producto-f9ljtq\",\n    \"metadata\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "Get a product",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/products/{{productId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/products/{{productId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"products",
+										"{{productId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 28 Feb 2024 20:41:18 GMT"
+								},
+								{
+									"key": "Report-To",
+									"value": "{\"group\":\"heroku-nel\",\"max_age\":3600,\"endpoints\":[{\"url\":\"https://nel.heroku.com/reports?ts=1709152878&sid=c46efe9b-d3d2-4a0c-8c76-bfafa16c5add&s=kuTXFt%2B%2FCjg5IP9WA7%2BrvXPWCr3z6OyTV9wPXt6zuCE%3D\"}]}"
+								},
+								{
+									"key": "Reporting-Endpoints",
+									"value": "heroku-nel=https://nel.heroku.com/reports?ts=1709152878&sid=c46efe9b-d3d2-4a0c-8c76-bfafa16c5add&s=kuTXFt%2B%2FCjg5IP9WA7%2BrvXPWCr3z6OyTV9wPXt6zuCE%3D"
+								},
+								{
+									"key": "Nel",
+									"value": "{\"report_to\":\"heroku-nel\",\"max_age\":3600,\"success_fraction\":0.005,\"failure_fraction\":0.05,\"response_headers\":[\"Via\"]}"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "SAMEORIGIN"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "0"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Download-Options",
+									"value": "noopen"
+								},
+								{
+									"key": "X-Permitted-Cross-Domain-Policies",
+									"value": "none"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Access-Control-Allow-Methods",
+									"value": "GET, OPTIONS"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"81651a5e4f385ba7019ac6c322343bfe\""
+								},
+								{
+									"key": "Cache-Control",
+									"value": "max-age=0, private, must-revalidate"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "_recurrente_session=Z5kPcBK0PmEvNofCvy%2BMFNgVePTr8D2vPzbvUsENoUpjsLMq%2F21h9eb17%2FB8pvKsVjWyzfOVY7ZGiJwZKt124GzoWW7scwczjgSwAnTcFqDGM%2FSovORwhxtaPkXsG8NcOziDw1%2FkE556drmpz80HvF9Bab9JRE45sqWZnwvuZIY%2BrZbxmdTs990sjrr%2BMmFayGZNqfXwsQ%3D%3D--4UtQ1cPYXN0wuHHN--xDCfqOme016ix4wPZNEWGQ%3D%3D; path=/; secure; HttpOnly; SameSite=Lax"
+								},
+								{
+									"key": "X-Request-Id",
+									"value": "9a93567d-bd07-4f64-88da-ecf22b197576"
+								},
+								{
+									"key": "X-Runtime",
+									"value": "0.021820"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=63072000; includeSubDomains"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1053"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": \"prod_9lstwgbr\",\n    \"status\": \"active\",\n    \"name\": \"El nombre de tu producto\",\n    \"description\": \"Descripción de tu producto\",\n    \"success_url\": \"https://www.google.com/\",\n    \"cancel_url\": \"https://www.amazon.com/\",\n    \"custom_terms_and_conditions\": \"Términos y condiciones\",\n    \"phone_requirement\": \"none\",\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"none\",\n    \"prices\": [\n        {\n            \"id\": \"price_rky4dog7\",\n            \"amount_in_cents\": 500,\n            \"currency\": \"GTQ\",\n            \"billing_interval_count\": 0,\n            \"billing_interval\": \"\",\n            \"charge_type\": \"one_time\",\n            \"periods_before_automatic_cancellation\": null,\n            \"free_trial_interval_count\": 0,\n            \"free_trial_interval\": \"\"\n        }\n    ],\n    \"storefront_link\": \"https://app.recurrente.com/s/surf-office/el-nombre-de-tu-producto\",\n    \"metadata\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "Get all products",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/products",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"products"
+							]
+						},
+						"description": "Por defecto, se muestran los 10 productos más recientes. Para obtener los siguientes 10 productos, agrega query params.\n\nEjemplo: [https://app.recurrente.com/api/products?page=2](https://app.recurrente.com/api/subscriptions?page=2)"
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/products",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"products"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": \"prod_9lstwgbr\",\n        \"status\": \"active\",\n        \"name\": \"El nombre de tu producto\",\n        \"description\": \"Descripción de tu producto\",\n        \"success_url\": \"https://www.google.com/\",\n        \"cancel_url\": \"https://www.amazon.com/\",\n        \"custom_terms_and_conditions\": \"Términos y condiciones\",\n        \"phone_requirement\": \"none\",\n        \"address_requirement\": \"none\",\n        \"billing_info_requirement\": \"none\",\n        \"prices\": [\n            {\n                \"id\": \"price_rky4dog7\",\n                \"amount_in_cents\": 500,\n                \"currency\": \"GTQ\",\n                \"billing_interval_count\": 0,\n                \"billing_interval\": \"\",\n                \"charge_type\": \"one_time\",\n                \"periods_before_automatic_cancellation\": null,\n                \"free_trial_interval_count\": 0,\n                \"free_trial_interval\": \"\"\n            }\n        ],\n        \"storefront_link\": \"https://app.recurrente.com/s/surf-office/el-nombre-de-tu-producto\",\n        \"metadata\": {}\n    },\n    {\n        \"id\": \"prod_psstwgbr\",\n        \"status\": \"active\",\n        \"name\": \"El nombre de tu producto 2\",\n        \"description\": \"Descripción de tu producto\",\n        \"success_url\": \"https://www.google.com/\",\n        \"cancel_url\": \"https://www.amazon.com/\",\n        \"custom_terms_and_conditions\": \"Términos y condiciones\",\n        \"phone_requirement\": \"none\",\n        \"address_requirement\": \"none\",\n        \"billing_info_requirement\": \"none\",\n        \"prices\": [\n            {\n            \"id\": \"price_rky4dog7\",\n            \"amount_in_cents\": 500,\n            \"currency\": \"GTQ\",\n            \"billing_interval_count\": 0,\n            \"billing_interval\": \"\",\n            \"charge_type\": \"one_time\",\n            \"periods_before_automatic_cancellation\": null,\n            \"free_trial_interval_count\": 0,\n            \"free_trial_interval\": \"\"\n            }\n        ],\n        \"storefront_link\": \"https://app.recurrente.com/s/surf-office/el-nombre-de-tu-producto-2\",\n        \"metadata\": {}\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Update a product",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "product[name]",
+									"value": "El nuevo nombre",
+									"description": "El nombre del producto.",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[0][id]]",
+									"value": "{{priceId}}",
+									"description": "Si quieres actualizar parámetros del precio, debés incluir el price_id",
+									"type": "text"
+								},
+								{
+									"key": "product[prices_attributes[0][amount_in_cents]]",
+									"value": "1500",
+									"description": "El monto a cobrar en centavos",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/products/{{productId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Para actualizar el precio de un producto, debés pasar el parámetro de `price_id`, como se muestra en el ejemplo.\n\nAdicional, puedes actualizar cualquier otro de los parámetros que se muestra en el endpoint de _Create a product._\n\n###### Borrar un precio\n\nPara borrar un precio, adicional a pasar el `price_id` debés pasar el parámetro de `_destroy` como mostrado aquí:\n\n`product[prices_attributes][0][_destroy]`"
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"product\": {\n        \"name\": \"El nuevo nombre del producto\",\n        \"prices_attributes\": [\n            {\n                \"id\": \"price_mirvwr9y\",\n                \"amount_in_cents\": \"1500\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/products/{{productId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"products",
+										"{{productId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"prod_wt1snpxg\",\n    \"status\": \"active\",\n    \"name\": \"El nuevo nombre del producto\",\n    \"description\": \"Nuevos términos y condiciones\",\n    \"success_url\": \"https://www.google.com/\",\n    \"cancel_url\": \"https://www.amazon.com/\",\n    \"custom_terms_and_conditions\": \"Nueva descripción\",\n    \"phone_requirement\": \"none\",\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"none\",\n    \"prices\": [\n        {\n            \"id\": \"price_mirvwr9y\",\n            \"amount_in_cents\": 1500,\n            \"currency\": \"GTQ\",\n            \"billing_interval_count\": 1,\n            \"billing_interval\": \"month\",\n            \"charge_type\": \"one_time\",\n            \"periods_before_automatic_cancellation\": null,\n            \"free_trial_interval_count\": 0,\n            \"free_trial_interval\": \"month\"\n        }\n    ],\n    \"storefront_link\": \"http://localhost:3000/s/surf-office/alquiler-de-tabla-por-el-dia\",\n    \"metadata\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete a product",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/products/{{productID}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productID}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/products/{{productId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"products",
+										"{{productId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"prod_m7vzucwi\",\n    \"status\": \"deleted\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Puedes crear dos tipos de productos:\n\n- Cobro único `one_time`\n    \n- Suscripción `recurring`\n    \n\nAbajo encontrarás los requests para ambos."
+		},
+		{
+			"name": "Coupons",
+			"item": [
+				{
+					"name": "Create a coupon",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "coupon[name]",
+									"value": "VERANO25",
+									"description": "El nombre de tu cupón",
+									"type": "text"
+								},
+								{
+									"key": "coupon[amount_off_in_cents]",
+									"value": "1500",
+									"description": "(Opcional) Monto de descuento en centavos (ej. 1500 = Q15.00)",
+									"type": "text"
+								},
+								{
+									"key": "coupon[percent_off]",
+									"value": "10",
+									"description": "(Opcional) Porcentaje de descuento (ej. 10 = 10%)",
+									"type": "text"
+								},
+								{
+									"key": "coupon[currency]",
+									"value": "GTQ",
+									"description": "Moneda ISO (ej. GTQ) – requerido si usas amount_off_in_cents",
+									"type": "text"
+								},
+								{
+									"key": "coupon[duration]",
+									"value": "once | forever",
+									"description": "En caso de una suscripción, si el cupón aplica solo al primer pago (\"once\") o a todos los pagos futuros (\"forever\").",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/coupons",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"coupons"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"coupon\": {\n        \"name\": \"NEWCOUPON\",\n        \"amount_off_in_cents\": 1500,\n        \"currency\": \"GTQ\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/coupons/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"coupons",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"coup_ugwoxcp4\",\n    \"name\": \"NEWCOUPON\",\n    \"amount_off_in_cents\": 1500,\n    \"percent_off\": null,\n    \"max_redemptions\": null,\n    \"currency\": \"GTQ\",\n    \"duration\": \"once\",\n    \"expires_at\": null,\n    \"status\": \"active\"\n }"
+						}
+					]
+				},
+				{
+					"name": "Get a coupon",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/coupons/{{couponId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"coupons",
+								"{{couponId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/coupons/{{couponID}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"coupons",
+										"{{couponID}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 28 Feb 2024 20:41:18 GMT"
+								},
+								{
+									"key": "Report-To",
+									"value": "{\"group\":\"heroku-nel\",\"max_age\":3600,\"endpoints\":[{\"url\":\"https://nel.heroku.com/reports?ts=1709152878&sid=c46efe9b-d3d2-4a0c-8c76-bfafa16c5add&s=kuTXFt%2B%2FCjg5IP9WA7%2BrvXPWCr3z6OyTV9wPXt6zuCE%3D\"}]}"
+								},
+								{
+									"key": "Reporting-Endpoints",
+									"value": "heroku-nel=https://nel.heroku.com/reports?ts=1709152878&sid=c46efe9b-d3d2-4a0c-8c76-bfafa16c5add&s=kuTXFt%2B%2FCjg5IP9WA7%2BrvXPWCr3z6OyTV9wPXt6zuCE%3D"
+								},
+								{
+									"key": "Nel",
+									"value": "{\"report_to\":\"heroku-nel\",\"max_age\":3600,\"success_fraction\":0.005,\"failure_fraction\":0.05,\"response_headers\":[\"Via\"]}"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "SAMEORIGIN"
+								},
+								{
+									"key": "X-Xss-Protection",
+									"value": "0"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-Download-Options",
+									"value": "noopen"
+								},
+								{
+									"key": "X-Permitted-Cross-Domain-Policies",
+									"value": "none"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "strict-origin-when-cross-origin"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Access-Control-Allow-Methods",
+									"value": "GET, OPTIONS"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"81651a5e4f385ba7019ac6c322343bfe\""
+								},
+								{
+									"key": "Cache-Control",
+									"value": "max-age=0, private, must-revalidate"
+								},
+								{
+									"key": "Set-Cookie",
+									"value": "_recurrente_session=Z5kPcBK0PmEvNofCvy%2BMFNgVePTr8D2vPzbvUsENoUpjsLMq%2F21h9eb17%2FB8pvKsVjWyzfOVY7ZGiJwZKt124GzoWW7scwczjgSwAnTcFqDGM%2FSovORwhxtaPkXsG8NcOziDw1%2FkE556drmpz80HvF9Bab9JRE45sqWZnwvuZIY%2BrZbxmdTs990sjrr%2BMmFayGZNqfXwsQ%3D%3D--4UtQ1cPYXN0wuHHN--xDCfqOme016ix4wPZNEWGQ%3D%3D; path=/; secure; HttpOnly; SameSite=Lax"
+								},
+								{
+									"key": "X-Request-Id",
+									"value": "9a93567d-bd07-4f64-88da-ecf22b197576"
+								},
+								{
+									"key": "X-Runtime",
+									"value": "0.021820"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=63072000; includeSubDomains"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1053"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": \"coup_ugwoxcp4\",\n    \"name\": \"NEWCOUPON\",\n    \"amount_off_in_cents\": 1500,\n    \"percent_off\": null,\n    \"max_redemptions\": null,\n    \"currency\": \"GTQ\",\n    \"duration\": \"once\",\n    \"expires_at\": null,\n    \"status\": \"active\"\n }"
+						}
+					]
+				},
+				{
+					"name": "Get all coupons",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/coupons",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"coupons"
+							]
+						},
+						"description": "Por defecto, se muestran los 10 cupones más recientes. Para obtener los siguientes 10 cupones, agrega query params.\n\nEjemplo: [https://app.recurrente.com/api/products?page=2](https://app.recurrente.com/api/subscriptions?page=2)"
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/coupons",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"coupons"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": \"coup_ugwoxcp4\",\n        \"name\": \"NEWCOUPON\",\n        \"amount_off_in_cents\": 1500,\n        \"percent_off\": null,\n        \"max_redemptions\": null,\n        \"currency\": \"GTQ\",\n        \"duration\": \"once\",\n        \"expires_at\": null,\n        \"status\": \"active\"\n    }\n ]"
+						}
+					]
+				},
+				{
+					"name": "Update a coupon",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "coupon[name]",
+									"value": "VERANO25",
+									"description": "El nombre de tu cupón",
+									"type": "text"
+								},
+								{
+									"key": "coupon[amount_off_in_cents]",
+									"value": "1500",
+									"description": "(Opcional) Monto de descuento en centavos (ej. 1500 = Q15.00)",
+									"type": "text"
+								},
+								{
+									"key": "coupon[percent_off]",
+									"value": "10",
+									"description": "(Opcional) Porcentaje de descuento (ej. 10 = 10%)",
+									"type": "text"
+								},
+								{
+									"key": "coupon[currency]",
+									"value": "GTQ",
+									"description": "Moneda ISO (ej. GTQ) – requerido si usas amount_off_in_cents",
+									"type": "text"
+								},
+								{
+									"key": "coupon[duration]",
+									"value": "once | forever",
+									"description": "Duración del cupón",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/coupons/{{couponId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"coupons",
+								"{{couponId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"coupon\": {\n        \"name\": \"NEWCOUPON\",\n        \"amount_off_in_cents\": 1500,\n        \"currency\": \"GTQ\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/coupons/{{couponID}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"coupons",
+										"{{couponID}}"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"coup_ugwoxcp4\",\n    \"name\": \"NEWCOUPON\",\n    \"amount_off_in_cents\": 1500,\n    \"percent_off\": null,\n    \"max_redemptions\": null,\n    \"currency\": \"GTQ\",\n    \"duration\": \"once\",\n    \"expires_at\": null,\n    \"status\": \"active\"\n }"
+						}
+					]
+				},
+				{
+					"name": "Delete a coupon",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/coupons/{{couponID}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"coupons",
+								"{{couponID}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/coupons/{{couponID}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"coupons",
+										"{{couponID}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"coup_eug4euns\",\n    \"status\": \"deleted\"\n}"
+						}
+					]
+				}
+			],
+			"description": "La API de Cupones permite a los comercios crear, consultar, actualizar y eliminar cupones de descuento.  \n  \nUn cupón define una promoción que puede ser aplicada a un pago, por ejemplo un monto fijo de descuento o un porcentaje."
+		},
+		{
+			"name": "Subscriptions",
+			"item": [
+				{
+					"name": "Get a subscription",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/subscriptions/{{subscriptionId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"subscriptions",
+								"{{subscriptionId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/subscriptions/{{subscriptionId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"subscriptions",
+										"{{subscriptionId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"su_nehndm7j\",\n    \"description\": \"One Free-Testable Banana\",\n    \"status\": \"active\",\n    \"created_at\": \"2024-03-01T03:52:12.636-06:00\",\n    \"updated_at\": \"2024-03-01T03:52:12.982-06:00\",\n    \"current_period_start\": \"2024-03-01T03:52:12.636-06:00\",\n    \"current_period_end\": \"2024-03-02T03:52:12.636-06:00\",\n    \"tax_name\": null,\n    \"tax_id\": null,\n    \"subscriber\": {\n        \"id\": \"us_rdctav2g\",\n        \"first_name\": \"Fela\",\n        \"last_name\": \"Kuti\",\n        \"full_name\": \"Fela Kuti\",\n        \"email\": \"test@user.com\",\n        \"phone_number\": null\n    },\n    \"checkout\": {\n        \"id\": \"ch_lmgbvesmihkqzma3\"\n    },\n    \"product\": {\n        \"id\": \"pr_7ehozftv\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get all subscriptions",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/subscriptions",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"subscriptions"
+							]
+						},
+						"description": "Por defecto, se muestran las 10 suscripciones más recientes. Para obtener las siguientes 10 suscripciones, agrega query params.\n\nEjemplo: [https://app.recurrente.com/api/subscriptions?page=2](https://app.recurrente.com/api/subscriptions?page=2)"
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/subscriptions",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"subscriptions"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": \"su_nehndm7j\",\n        \"description\": \"One Free-Testable Banana\",\n        \"status\": \"active\",\n        \"created_at\": \"2024-03-01T03:52:12.636-06:00\",\n        \"updated_at\": \"2024-03-01T03:52:12.982-06:00\",\n        \"current_period_start\": \"2024-03-01T03:52:12.636-06:00\",\n        \"current_period_end\": \"2024-03-02T03:52:12.636-06:00\",\n        \"tax_name\": null,\n        \"tax_id\": null,\n        \"subscriber\": {\n            \"id\": \"us_rdctav2g\",\n            \"first_name\": \"Fela\",\n            \"last_name\": \"Kuti\",\n            \"full_name\": \"Fela Kuti\",\n            \"email\": \"test@user.com\",\n            \"phone_number\": null\n        },\n        \"checkout\": {\n            \"id\": \"ch_lmgbvesmihkqzma3\"\n        },\n        \"product\": {\n            \"id\": \"pr_7ehozftv\"\n        }\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Cancel a subscription",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/subscriptions/{{subscriptionId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"subscriptions",
+								"{{subscriptionId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/subscriptions/{{subscriptionId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"subscriptions",
+										"{{subscriptionId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Suscripción cancelada\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Las suscripciones te permiten crear pagos recurrentes. Puedes cobrar semanal, mensual, o anualmente. O puedes elegir un período más específico, como \"cada 2 meses\". Una vez el usuario empiece su suscripción, se le cobrará recurrentemente en el intervalo seleccionado.\n\n###### Status de una suscripción\n\nLos posibles status de una suscripción son:\n\n- `active` - Cuando la suscripción está activa y los pagos están al día.\n    \n- `paused` - Cuando la suscripción fue pausada, ya sea por el comercio o por el usuario. La suscripción no se cobrará de nuevo hasta que el estado sea cambiado a `active`\n    \n- `past_due` - Cuando el período de la suscripción está vencido y no se ha logrado cobrar el último pago. Se hacen 3 re-intentos automáticos de cobrar el pago en los siguientes 5 días. Si se logra cobrar, se cambia a un estado de `active`. Si no se logra cobrar, se cambia a `cancelled`.\n    \n- `cancelled` - Cuando la suscripción fue cancelada. Ya no se harán intentos de cobro.\n    \n- `unable_to_start` - Cuando el primer pago de la suscripción es fallido y no es posible activar la suscripción."
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create a user",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "me@example.com",
+									"type": "text"
+								},
+								{
+									"key": "full_name",
+									"value": "Jorge Luis Borges",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/users/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"users",
+								""
+							]
+						},
+						"description": "Existen dos formas de crear un checkout. Aquí, vamos a ver la primera:\n\n1. **Pasando todos los detalles (nombre, precio, etc.) de los \"items\" que quiero añadir.**\n    \n2. Pasando el \"Price ID\" de los productos que quiero añadir."
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"me@example.com\",\n    \"full_name\": \"Jorge Luis Borges\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/users/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"users",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"email\": \"me@example.com\",\n    \"id\": \"us_y6fxiihb\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Transfers",
+			"item": [
+				{
+					"name": "Create a transfer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "currency",
+									"value": "GTQ",
+									"description": "La moneda a cobrar. Posibles valores son:\n- GTQ\n- USD",
+									"type": "text"
+								},
+								{
+									"key": "amount_in_cents",
+									"value": "100",
+									"description": "El monto a cobrar en centavos",
+									"type": "text"
+								},
+								{
+									"key": "recipient_id",
+									"value": "recurrente",
+									"description": "El recipient_id es el @ de la cuenta a la que quieres enviar dinero.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/transfers/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"transfers",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"currency\": \"GTQ\",\n    \"amount_in_cents\": \"100\",\n    \"recipient_id\": \"recurrente\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/transfers/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"transfers",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"tr_nr4yplup\",\n    \"status\": \"completed\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Envía dinero de una cuenta de Recurrente a otra, sin ningún costo.\n\nLo único que necesitas es saber el \"@\" de la cuenta a la que quieres enviar dinero, para incluirlo como el `recipient_id`\n\n<img src=\"https://content.pstmn.io/232f2e14-4b44-4008-8c96-a06d3c9bd35f/ZWM3NTA0MzAtY2YzMS0xMWVlLTllYTEtMGUzMzdlNTNjYThhLnBuZw==\" width=\"444\" height=\"284\">"
+		},
+		{
+			"name": "Refunds",
+			"item": [
+				{
+					"name": "Create a refund",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "payment_intent_id",
+									"value": "pa_abc123",
+									"description": "El ID del pago que se desea reembolsar",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/refunds/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"refunds",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"payment_intent_id\": \"pa_e6kc6vx2\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/refunds/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"refunds",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"re_3jfrywsf\",\n    \"status\": \"succeeded\",\n    \"customer\": {\n        \"id\": \"us_ik1qykpd\",\n        \"email\": \"juan@gmail.com\",\n        \"full_name\": \"Juan Perez\"\n    },\n    \"account_refunded_amount_in_cents\": 2187,\n    \"customer_refunded_amount_in_cents\": 2500,\n    \"currency\": \"GTQ\",\n    \"created_at\": \"2024-06-23T12:26:51.962-06:00\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get a refund",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/refunds/{{refundId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"refunds",
+								"{{refundId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "https://app.recurrente.com/api/refunds/{{refundId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"refunds",
+										"{{refundId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"re_3jfrywsf\",\n    \"status\": \"succeeded\",\n    \"customer\": {\n        \"id\": \"us_ik1qykpd\",\n        \"email\": \"juan@gmail.com\",\n        \"full_name\": \"Juan Perez\"\n    },\n    \"account_refunded_amount_in_cents\": 2187,\n    \"customer_refunded_amount_in_cents\": 2500,\n    \"currency\": \"GTQ\",\n    \"created_at\": \"2024-06-23T12:26:51.962-06:00\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Webhooks",
+			"item": [
+				{
+					"name": "Create a webhook endpoint",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "url",
+									"value": "https://example.com/webhook",
+									"description": "El url al que se enviarán los webhooks",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Mi endpoint de prueba",
+									"description": "Opcional. Una breve descripción del endpoint",
+									"type": "text"
+								},
+								{
+									"key": "metadata",
+									"value": "{}",
+									"description": "Opcional. Cualquier información que quieras adjuntar al endpoint",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/webhook_endpoints/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"webhook_endpoints",
+								""
+							]
+						},
+						"description": "# Create Webhook Endpoint\n\nPermite crear nuevos webhooks endpoints en donde se enviaran las notificaciones webhook."
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"url\": \"https://example.com/webhook\",\n    \"description\": \"Optional description of the endpoint\",\n    \"metadata\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/webhook_endpoints/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"webhook_endpoints",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"description\": \"Optional description of the endpoint\",\n    \"url\": \"https://example.com/webhook\",\n    \"disabled\": false,\n    \"createdAt\": \"2024-05-03T18:28:07.673413Z\",\n    \"updatedAt\": \"2024-05-03T18:28:07.673427Z\",\n    \"id\": \"ep_2fy6I9KODnHzw7Zf0ZGmMs8gEN9\",\n    \"metadata\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete a webhook endpoint",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://app.recurrente.com/api/webhook_endpoints/{{webhookId}}",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"webhook_endpoints",
+								"{{webhookId}}"
+							]
+						},
+						"description": "# Create Webhook Endpoint\n\nThis endpoint allows you to create a new webhook endpoint for receiving webhook notifications.\n\n## Request Body\n\n- `url` (text): The URL to which the webhook notifications will be sent.\n- `description` (text, optional): A brief description of the endpoint.\n- `metadata` (text, optional): Any additional information you want to attach to the endpoint.\n    \n\n### Example\n\n``` json\n{\n    \"url\": \"https://your-webhook-url.com\",\n    \"description\": \"Optional description of the endpoint\",\n    \"metadata\": \"Optional metadata\"\n}\n\n ```\n\n## Response\n\n- `id` (string): The ID of the created webhook endpoint.\n- `status` (string): The status of the request.\n    \n\n### Example\n\n``` json\n{\n    \"id\": \"webhook_endpoint_id\",\n    \"status\": \"success\"\n}\n\n ```"
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									}
+								],
+								"url": {
+									"raw": "https://app.recurrente.com/api/webhook_endpoints/{{webhookId}}",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"webhook_endpoints",
+										"{{webhookId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"description\": \"Optional description of the endpoint\",\n    \"url\": \"https://example.com/webhook\",\n    \"disabled\": false,\n    \"createdAt\": \"2024-05-03T18:28:07.673413Z\",\n    \"updatedAt\": \"2024-05-03T18:28:07.673427Z\",\n    \"id\": \"ep_2fy6I9KODnHzw7Zf0ZGmMs8gEN9\",\n    \"metadata\": {}\n}"
+						}
+					]
+				},
+				{
+					"name": "Get all webhook endpoints",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://app.recurrente.com/api/webhook_endpoints/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"webhook_endpoints",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"disabled": true
+									}
+								],
+								"url": {
+									"raw": "https://app.recurrente.com/api/webhook_endpoints/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"webhook_endpoints",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "[\n    {\n        \"description\": \"Optional description of the endpoint\",\n        \"url\": \"https://example.com/webhook\",\n        \"disabled\": false,\n        \"createdAt\": \"2024-05-03T18:28:07.673413Z\",\n        \"updatedAt\": \"2024-05-03T18:28:07.673427Z\",\n        \"id\": \"ep_2fy6I9KODnHzw7Zf0ZGmMs8gEN9\",\n        \"metadata\": {}\n    }\n]"
+						}
+					]
+				}
+			],
+			"description": "###### Instalación\n\nPara activar webhooks para tu cuenta, dentro de tu cuenta de Recurrente, ve a:\n\n**Configuración** → **Desarrolladores y API.**\n\nAhí apacha en **\"Webhooks\",** y continúa a añadir el _endpoint_ a donde quieres que sean enviados los requests.\n\n###### Webhook Event Types\n\n**payment_intent.succeeded**\n\nSe emite con un cobro exitoso con tarjeta (crédito o débito). Los fondos ya están en tu balance de Recurrente.\n\n_Ejemplo de respuesta:_\n\n``` json\n{\n  \"id\": \"pa_id123\",\n  \"event_type\": \"payment_intent.succeeded\",\n  \"api_version\": \"2024-04-24\",\n  \"checkout\": {\n    \"id\": \"ch_id123\",\n    \"status\": \"paid\",\n    \"payment\": {\n      \"id\": \"pa_laybj3zw\",\n      \"paymentable\": {\n        \"type\": \"OneTimePayment\",\n        \"id\": \"on_arognqni\",\n        \"tax_name\": null,\n        \"tax_id\": null,\n        \"address\": null,\n        \"phone_number\": null\n      }\n    },\n    \"payment_method\": {\n      \"id\": \"pay_m_7v5ie3pw\",\n      \"type\": \"card\",\n      \"card\": {\n        \"last4\": \"0000\",\n        \"network\": \"visa\"\n      }\n    },\n    \"transfer_setups\": [],\n    \"metadata\": {}\n  },\n  \"created_at\": \"2024-02-16T03:01:13.260Z\",\n  \"failure_reason\": null,\n  \"amount_in_cents\": 10000,\n  \"currency\": \"GTQ\",\n  \"fee\": 450,\n  \"vat_withheld\": 160,\n  \"vat_withheld_currency\": \"GTQ\",\n  \"customer\": {\n    \"email\": \"hello@example.com\",\n    \"full_name\": \"Max Rodriguez\",\n    \"id\": \"us_id123\"\n  },\n  \"payment\": {\n    \"id\": \"pa_id123\",\n    \"paymentable\": {\n      \"id\": \"su_id123\",\n      \"tax_id\": null,\n      \"tax_name\": null,\n      \"type\": \"Subscription\",\n      \"address\": {\n        \"address_line_1\": \"Plaza Obelisco\",\n        \"address_line_2\": null,\n        \"city\": \"Guatemala\",\n        \"country\": \"Guatemala\",\n        \"zip_code\": \"01010\"\n      },\n      \"phone_number\": \"5555-5555\"\n    }\n  },\n  \"product\": {\n    \"id\": \"prod_id123\"\n  },\n  \"invoice\": {\n    \"id\": \"inv_123\",\n    \"tax_invoice_url\": null\n  }\n}\n\n ```\n\n**payment_intent.failed**\n\nCobro fallido con tarjeta.\n\n_Ejemplo de respuesta:_\n\n``` json\n{{\n  \"id\": \"pa_id123\",\n  \"event_type\": \"payment_intent.failed\",\n  \"api_version\": \"2024-03-13\",\n  \"checkout\": {\n    \"id\": \"ch_id123\"\n  },\n  \"created_at\": \"2024-02-16T03:01:13.260Z\",\n  \"failure_reason\": \"Tu banco ha rechazado la transacción. Llama a tu banco y pide que autoricen esta transacción.\",,\n  \"amount_in_cents\": 10000,\n  \"currency\": \"GTQ\",\n  \"fee\": 0,\n  \"vat_withheld\": 0,\n  \"vat_withheld_currency\": \"GTQ\",\n  \"customer\": {\n    \"email\": \"hello@example.com\",\n    \"full_name\": \"Max Rodriguez\",\n    \"id\": \"us_id123\"\n  },\n  \"payment\": {\n    \"id\": \"pa_id123\",\n    \"paymentable\": {\n      \"id\": \"su_id123\",\n      \"tax_id\": null,\n      \"tax_name\": null,\n      \"type\": \"Subscription\",\n      \"address\": {\n        \"address_line_1\": \"Plaza Obelisco\",\n        \"address_line_2\": null,\n        \"city\": \"Guatemala\",\n        \"country\": \"Guatemala\",\n        \"zip_code\": \"01010\"\n      },\n      \"phone_number\": \"5555-5555\"\n    }\n  },\n  \"product\": {\n    \"id\": \"prod_id123\"\n  },\n  \"invoice\": {\n    \"id\": \"inv_123\",\n    \"tax_invoice_url\": null\n  }\n}\n\n ```\n\n**subscription.create**\n\nSi el producto es recurrente, se emite además del payment.succeeded este evento con la información de la suscripción.\n\n_Ejemplo de respuesta:_\n\n``` json\n{\n  \"api_version\": \"2024-04-24\",\n  \"created_at\": \"2025-10-13T13:59:27.931Z\",\n  \"customer_email\": \"example@example.com\",\n  \"customer_id\": \"us_1234\",\n  \"customer_name\": \"Pedro Pérez\",\n  \"event_type\": \"subscription.create\",\n  \"id\": \"su_123\",\n  \"payment\": {\n    \"id\": \"pa_123\",\n    \"paymentable\": {\n      \"address\": null,\n      \"id\": \"su_123\",\n      \"phone_number\": \"+50255555555\",\n      \"tax_id\": \"\",\n      \"tax_name\": null,\n      \"type\": \"Subscription\"\n    }\n  },\n  \"product\": {\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"optional\",\n    \"cancel_url\": \"\",\n    \"custom_terms_and_conditions\": \"Términos y condiciones\",\n    \"description\": \"Suscripción de prueba\",\n    \"has_dynamic_pricing\": false,\n    \"id\": \"prod_123\",\n    \"metadata\": {},\n    \"name\": \"Plan de Prueba\",\n    \"phone_requirement\": \"required\",\n    \"prices\": [\n      {\n        \"amount_in_cents\": 999,\n        \"billing_interval\": \"month\",\n        \"billing_interval_count\": 1,\n        \"charge_type\": \"recurring\",\n        \"currency\": \"GTQ\",\n        \"free_trial_interval\": \"month\",\n        \"free_trial_interval_count\": 0,\n        \"id\": \"price_123\",\n        \"periods_before_automatic_cancellation\": null\n      }\n    ],\n    \"status\": \"active\",\n    \"storefront_link\": \"https://app.recurrente.com/s/recurrente/plan-de-prueba\",\n    \"success_url\": \"\"\n  }\n}\n\n ```\n\n**subscription.past_due**\n\nSe emite cuando el cobro automático de una suscripción falla por primera vez.\n\n_Nota: En una suscripción, cuando un pago falla, Recurrente intenta cobrarlo de nuevo 3 y 5 días después. Si ambos re-intentos son fallidos, en ese momento se cancela la suscripción._\n\n_Ejemplo de respuesta:_\n\n``` json\n{\n  \"api_version\": \"2024-04-24\",\n  \"created_at\": \"2025-10-13T13:59:27.931Z\",\n  \"customer_email\": \"example@example.com\",\n  \"customer_id\": \"us_1234\",\n  \"customer_name\": \"Pedro Pérez\",\n  \"event_type\": \"subscription.past_due\",\n  \"id\": \"su_123\",\n  \"payment\": {\n    \"id\": \"pa_123\",\n    \"paymentable\": {\n      \"address\": null,\n      \"id\": \"su_123\",\n      \"phone_number\": \"+50255555555\",\n      \"tax_id\": \"\",\n      \"tax_name\": null,\n      \"type\": \"Subscription\"\n    }\n  },\n  \"product\": {\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"optional\",\n    \"cancel_url\": \"\",\n    \"custom_terms_and_conditions\": \"Términos y condiciones\",\n    \"description\": \"Suscripción de prueba\",\n    \"has_dynamic_pricing\": false,\n    \"id\": \"prod_123\",\n    \"metadata\": {},\n    \"name\": \"Plan de Prueba\",\n    \"phone_requirement\": \"required\",\n    \"prices\": [\n      {\n        \"amount_in_cents\": 999,\n        \"billing_interval\": \"month\",\n        \"billing_interval_count\": 1,\n        \"charge_type\": \"recurring\",\n        \"currency\": \"GTQ\",\n        \"free_trial_interval\": \"month\",\n        \"free_trial_interval_count\": 0,\n        \"id\": \"price_123\",\n        \"periods_before_automatic_cancellation\": null\n      }\n    ],\n    \"status\": \"active\",\n    \"storefront_link\": \"https://app.recurrente.com/s/recurrente/plan-de-prueba\",\n    \"success_url\": \"\"\n  }\n}\n\n ```\n\n**subscription.paused**\n\nSe emite cuando se pausa la suscripción. Una suscripción pausada no se volverá a cobrar hasta que sea reactivada.\n\n_Ejemplo de respuesta:_\n\n``` json\n{\n  \"api_version\": \"2024-04-24\",\n  \"created_at\": \"2025-10-13T13:59:27.931Z\",\n  \"customer_email\": \"example@example.com\",\n  \"customer_id\": \"us_1234\",\n  \"customer_name\": \"Pedro Pérez\",\n  \"event_type\": \"subscription.paused\",\n  \"id\": \"su_123\",\n  \"payment\": {\n    \"id\": \"pa_123\",\n    \"paymentable\": {\n      \"address\": null,\n      \"id\": \"su_123\",\n      \"phone_number\": \"+50255555555\",\n      \"tax_id\": \"\",\n      \"tax_name\": null,\n      \"type\": \"Subscription\"\n    }\n  },\n  \"product\": {\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"optional\",\n    \"cancel_url\": \"\",\n    \"custom_terms_and_conditions\": \"Términos y condiciones\",\n    \"description\": \"Suscripción de prueba\",\n    \"has_dynamic_pricing\": false,\n    \"id\": \"prod_123\",\n    \"metadata\": {},\n    \"name\": \"Plan de Prueba\",\n    \"phone_requirement\": \"required\",\n    \"prices\": [\n      {\n        \"amount_in_cents\": 999,\n        \"billing_interval\": \"month\",\n        \"billing_interval_count\": 1,\n        \"charge_type\": \"recurring\",\n        \"currency\": \"GTQ\",\n        \"free_trial_interval\": \"month\",\n        \"free_trial_interval_count\": 0,\n        \"id\": \"price_123\",\n        \"periods_before_automatic_cancellation\": null\n      }\n    ],\n    \"status\": \"active\",\n    \"storefront_link\": \"https://app.recurrente.com/s/recurrente/plan-de-prueba\",\n    \"success_url\": \"\"\n  }\n}\n\n ```\n\n**subscription.cancel**\n\nSe emite cuando el cobro automático de una suscripción falla por tercera vez.\n\n_Nota: En una suscripción, cuando un pago falla, Recurrente intenta cobrarlo de nuevo 3 y 5 días después. Si ambos re-intentos son fallidos, en ese momento se cancela la suscripción._\n\n_Ejemplo de respuesta:_\n\n``` json\n{\n  \"api_version\": \"2024-04-24\",\n  \"created_at\": \"2025-10-13T13:59:27.931Z\",\n  \"customer_email\": \"example@example.com\",\n  \"customer_id\": \"us_1234\",\n  \"customer_name\": \"Pedro Pérez\",\n  \"event_type\": \"subscription.cancel\",\n  \"id\": \"su_123\",\n  \"payment\": {\n    \"id\": \"pa_123\",\n    \"paymentable\": {\n      \"address\": null,\n      \"id\": \"su_123\",\n      \"phone_number\": \"+50255555555\",\n      \"tax_id\": \"\",\n      \"tax_name\": null,\n      \"type\": \"Subscription\"\n    }\n  },\n  \"product\": {\n    \"address_requirement\": \"none\",\n    \"billing_info_requirement\": \"optional\",\n    \"cancel_url\": \"\",\n    \"custom_terms_and_conditions\": \"Términos y condiciones\",\n    \"description\": \"Suscripción de prueba\",\n    \"has_dynamic_pricing\": false,\n    \"id\": \"prod_123\",\n    \"metadata\": {},\n    \"name\": \"Plan de Prueba\",\n    \"phone_requirement\": \"required\",\n    \"prices\": [\n      {\n        \"amount_in_cents\": 999,\n        \"billing_interval\": \"month\",\n        \"billing_interval_count\": 1,\n        \"charge_type\": \"recurring\",\n        \"currency\": \"GTQ\",\n        \"free_trial_interval\": \"month\",\n        \"free_trial_interval_count\": 0,\n        \"id\": \"price_123\",\n        \"periods_before_automatic_cancellation\": null\n      }\n    ],\n    \"status\": \"active\",\n    \"storefront_link\": \"https://app.recurrente.com/s/recurrente/plan-de-prueba\",\n    \"success_url\": \"\"\n  }\n}\n\n ```\n\n**bank_transfer_intent.pending**\n\nSe emite cuando se inicia un cobro con transferencia bancaria. En cuanto se reciba el dinero en la cuenta, se emitirá bank_transfer_intent.succeeded. De lo contrario, se emitirá bank_transfer_intent.failed.\n\n``` json\n{\n   \"id\":\"ba_123\",\n   \"event_type\": \"bank_transfer_intent.pending\",\n   \"api_version\": \"2024-04-24\",\n   \"created_at\":\"2024-03-04T18:08:40.210Z\",\n   \"customer_id\": \"us_t8nlvpwq\",\n  \"customer\": {\n    \"id\": \"us_t8nlvpwq\"\n  },\n  \"amount_in_cents\": 10000,\n  \"currency\": \"GTQ\",\n   \"product\": {\n      \"id\":\"prod_123\"\n   },\n  \"checkout\": {\n    \"id\": \"ch_5wlclm4jqpg3fe09\",\n    \"status\": \"payment_in_progress\",\n    \"payment\": {\n      \"id\": \"pa_123\",\n      \"paymentable\": {\n        \"type\": \"OneTimePayment\",\n        \"id\": \"on_123\",\n        \"tax_name\": \"Acme S.A.\",\n        \"tax_id\": \"1234567\",\n        \"address\": {\n          \"address_line_1\": \"Plaza Obelisco\",\n          \"address_line_2\": null,\n          \"city\": \"Guatemala\",\n          \"country\": \"Guatemala\",\n          \"zip_code\": \"01010\"\n        },\n        \"phone_number\": \"5555-5555\"\n      }\n   },\n    \"payment_method\": null,\n    \"transfer_setups\": [],\n    \"metadata\": {}\n  },\n   \"payment\": {\n      \"id\": \"pa_123\",\n      \"paymentable\": {\n        \"type\": \"OneTimePayment\", // Deprecated, no usar\n        \"id\": \"on_123\", // Deprecated, no usar\n        \"tax_name\": \"Acme S.A.\",\n        \"tax_id\": \"1234567\",\n        \"address\": {\n          \"address_line_1\": \"Plaza Obelisco\",\n          \"address_line_2\": null,\n          \"city\": \"Guatemala\",\n          \"country\": \"Guatemala\",\n          \"zip_code\": \"01010\"\n        },\n        \"phone_number\": \"5555-5555\"\n      }\n   },\n  \"tax_invoice_url\": null\n}\n\n ```\n\n**bank_transfer_intent.succeeded**\n\nSe emite con un cobro exitoso con transferencia bancaria. Los fondos ya están en tu balance de Recurrente.\n\n``` json\n{\n   \"id\":\"ba_123\",\n   \"event_type\": \"bank_transfer_intent.succeeded\",\n   \"api_version\": \"2024-04-24\",\n   \"created_at\":\"2024-03-04T18:08:40.210Z\",\n   \"customer_id\": \"us_t8nlvpwq\",\n  \"customer\": {\n    \"id\": \"us_t8nlvpwq\"\n  },\n  \"amount_in_cents\": 10000,\n  \"currency\": \"GTQ\",\n   \"product\": {\n      \"id\":\"prod_123\"\n   },\n   \"checkout\": {\n    \"id\": \"ch_5wlclm4jqpg3fe09\",\n    \"status\": \"paid\",\n    \"payment\": {\n      \"id\": \"pa_123\",\n      \"paymentable\": {\n        \"type\": \"OneTimePayment\",\n        \"id\": \"on_123\",\n        \"tax_name\": \"Acme S.A.\",\n        \"tax_id\": \"1234567\",\n        \"address\": {\n          \"address_line_1\": \"Plaza Obelisco\",\n          \"address_line_2\": null,\n          \"city\": \"Guatemala\",\n          \"country\": \"Guatemala\",\n          \"zip_code\": \"01010\"\n        },\n        \"phone_number\": \"5555-5555\"\n      }\n   },\n    \"payment_method\": {\n      \"id\": \"pay_m_zmbxckyn\",\n      \"type\": \"bank_transfer_receiver\",\n      \"bank_transfer_receiver\": {}\n    },\n    \"transfer_setups\": [],\n    \"metadata\": {}\n  },\n  \"payment\": {\n      \"id\": \"pa_123\",\n      \"paymentable\": {\n        \"type\": \"OneTimePayment\", // Deprecated, no usar\n        \"id\": \"on_123\", // Deprecated, no usar\n        \"tax_name\": \"Acme S.A.\",\n        \"tax_id\": \"1234567\",\n        \"address\": {\n          \"address_line_1\": \"Plaza Obelisco\",\n          \"address_line_2\": null,\n          \"city\": \"Guatemala\",\n          \"country\": \"Guatemala\",\n          \"zip_code\": \"01010\"\n        },\n        \"phone_number\": \"5555-5555\"\n      }\n   },\n  \"tax_invoice_url\": null\n}\n\n ```\n\n**bank_transfer_intent.failed**\n\nSe emite con un cobro fallido con transferencia bancaria. Esto sucede cuando no se reciben los fondos en la cuenta de banco, o se recibe el monto incorrecto.\n\n``` json\n{\n   \"id\":\"ba_123\",\n   \"event_type\": \"bank_transfer_intent.failed\",\n   \"api_version\":\"2023-08-29\",\n   \"created_at\":\"2024-03-04T18:08:40.210Z\",\n   \"customer_id\": \"us_t8nlvpwq\",\n  \"customer\": {\n    \"id\": \"us_t8nlvpwq\"\n  },\n  \"amount_in_cents\": 10000,\n  \"currency\": \"GTQ\",\n   \"product\": {\n      \"id\":\"prod_123\"\n   },\n   \"checkout\": {\n    \"id\": \"ch_5wlclm4jqpg3fe09\",\n    \"status\": \"unpaid\",\n    \"payment\": {\n      \"id\": \"pa_123\",\n      \"paymentable\": {\n        \"type\": \"OneTimePayment\",\n        \"id\": \"on_123\",\n        \"tax_name\": \"Acme S.A.\",\n        \"tax_id\": \"1234567\",\n        \"address\": {\n          \"address_line_1\": \"Plaza Obelisco\",\n          \"address_line_2\": null,\n          \"city\": \"Guatemala\",\n          \"country\": \"Guatemala\",\n          \"zip_code\": \"01010\"\n        },\n        \"phone_number\": \"5555-5555\"\n      }\n   },\n    \"payment_method\": null,\n    \"transfer_setups\": [],\n    \"metadata\": {}\n  },\n   \"payment\": {\n      \"id\": \"pa_123\",\n      \"paymentable\": {\n        \"type\": \"OneTimePayment\", // Deprecated, no usar\n        \"id\": \"on_123\", // Deprecated, no usar\n        \"tax_name\": \"Acme S.A.\",\n        \"tax_id\": \"1234567\",\n        \"address\": {\n          \"address_line_1\": \"Plaza Obelisco\",\n          \"address_line_2\": null,\n          \"city\": \"Guatemala\",\n          \"country\": \"Guatemala\",\n          \"zip_code\": \"01010\"\n        },\n        \"phone_number\": \"5555-5555\"\n      }\n   },\n  \"tax_invoice_url\": null\n}\n\n ```\n\n**setup_intent.succeeded**\n\nSe emite cuando se inicia exitosamente una suscripción con un período de prueba. También se emite cuando se tokeniza una tarjeta sin cobrarla.\n\n``` json\n{\n   \"api_version\":\"2024-03-13\",\n   \"created_at\":\"2024-04-10T10:31:45.806-06:00\",\n   \"event_type\":\"setup_intent.succeeded\",\n   \"status\":\"succeeded\",\n   \"suscription\":{\n      \"id\":\"su_vh8v33ac\"\n   }\n}\n\n ```\n\n**setup_intent.cancelled**\n\nSe emite cuando no se logra tokenizar una tarjeta sin cobrarla. Esto sucede cuando el primer pago de una suscripción con período de prueba, falla.\n\n``` json\n{\n   \"api_version\":\"2024-03-13\",\n   \"created_at\":\"2024-04-10T10:31:45.806-06:00\",\n   \"event_type\":\"setup_intent.cancelled\",\n   \"status\":\"cancelled\",\n   \"suscription\":{\n      \"id\":\"su_vh8v33ac\"\n   }\n}\n\n ```"
+		},
+		{
+			"name": "Cuentas Conectadas",
+			"item": [
+				{
+					"name": "Create a checkout for a connected account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "items[][currency]",
+									"value": "GTQ",
+									"description": "La moneda a cobrar.\n\nPosibles valores son:\n- GTQ\n- USD",
+									"type": "text"
+								},
+								{
+									"key": "items[][amount_in_cents]",
+									"value": "3000",
+									"description": "Monto a cobrar en centavos.",
+									"type": "text"
+								},
+								{
+									"key": "custom_account_id",
+									"value": "ac_123456",
+									"description": "(Opcional) El ID de la cuenta que va a crear el checkout. Debe ser una cuenta conectada (hija).\n\nSi lo dejas en blanco, sera tu cuenta quien creará el checkout.",
+									"type": "text"
+								},
+								{
+									"key": "transfer_setups[][amount_in_cents]",
+									"value": "100",
+									"description": "(Opcional) Monto en centavos a enviar a otra cuenta después de un pago exitoso.",
+									"type": "text"
+								},
+								{
+									"key": "transfer_setups[][recipient_id]",
+									"value": "",
+									"description": "(Opcional) El ID de la cuenta a la cuál se va a enviar el monto definido anteriormente al recibir un pago exitoso. Puede ser cualquier cuenta de Recurrente.\n\nSi se queda en blanco, se usará el ID de tu cuenta como default, y el monto en centavos se te transferirá a ti.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/checkouts/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"checkouts",
+								""
+							],
+							"query": [
+								{
+									"key": " ",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "items[][currency]",
+											"value": "GTQ",
+											"description": "La moneda a cobrar.\n\nPosibles valores son:\n- GTQ\n- USD",
+											"type": "text"
+										},
+										{
+											"key": "items[][amount_in_cents]",
+											"value": "3000",
+											"description": "Monto a cobrar en centavos.",
+											"type": "text"
+										},
+										{
+											"key": "custom_account_id",
+											"value": "ac_123456",
+											"description": "El ID de la cuenta que va a crear el checkout. Debe ser mi cuenta o una cuenta conectada (hija).",
+											"type": "text"
+										},
+										{
+											"key": "transfer_setups[][amount_in_cents]",
+											"value": "100",
+											"description": "(Opcional) Monto en centavos a enviar a otra cuenta después de un pago exitoso.",
+											"type": "text"
+										},
+										{
+											"key": "transfer_setups[][recipient_id]",
+											"value": "",
+											"description": "(Opcional) El ID de la cuenta a la cuál se va a enviar el monto definido anteriormente al recibir un pago exitoso. Puede ser cualquier cuenta de Recurrente.\n\nSi se queda en blanco, se usará el ID de tu cuenta como default, y el monto en centavos se te transferirá a ti.",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/checkouts/",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"checkouts",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"ch_672wumotzeuqqyzf\",\n    \"checkout_url\": \"https://app.recurrente.com/checkout-session/ch_672wumotzeuqqyzf\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Si estás construyendo una plataforma o un marketplace, y quieres:\n\n1. Cobrar en nombre de alguien más o;\n    \n2. Compartir los ingresos de las ventas con otras cuentas\n    \n\nLa funcionalidad de \"Cuentas conectadas\" es para ti.\n\n👨‍💻 Con Cuentas Conectadas puedes **realizar cobros en nombre de otras cuentas utilizando tus propias Llaves API**, sin necesidad de acceder ni utilizar las llaves API de esas cuentas.\n\n###### ¿Cómo conecto dos cuentas?\n\nEsto se debe hacer a través del UI de Recurrente. Sigue [las intrucciones aquí](https://ayuda.recurrente.com/es/articles/9185861-cuentas-conectadas-como-cobrar-en-nombre-de-otra-cuenta).\n\n###### ¿Cómo me entero de los eventos en una cuenta hija?\n\nA través de Webhooks, recibirás eventos con los parámetros `connected: true` y `account_id: ac_123456` con lo que podrás identificar el evento y la cuenta que lo generó."
+		},
+		{
+			"name": "Embedded Checkouts",
+			"item": [],
+			"description": "**Para ver la versión más actualizada de esta guía, visita el repo:** [https://github.com/recurrente/recurrente-checkout](https://github.com/recurrente/recurrente-checkout)\n\n**Recurrente Checkout** es una librería JavaScript que te permite **insertar un checkout responsivo y seguro en tu propia página web**. Funciona mostrando un iframe con tu sesión de pago y maneja callbacks para eventos clave como éxito, fallo o pagos en proceso.\n\nPara ver un video de cómo funciona: [https://youtu.be/OUIYVcrnPr0](https://youtu.be/OUIYVcrnPr0)\n\n**Antes de comenzar**: Para usar esta biblioteca, necesitas crear un checkout en Recurrente. Consulta la [documentación de creación de checkouts](https://docs.recurrente.com/) para obtener tu URL de checkout.\n\n## Instalación\n\n## NPM (Recomendado)\n\n```\nnpm install recurrente-checkout\n\n ```\n\n### CDN\n\n⚠️ En producción, recomendamos usar una versión específica (por ejemplo, @0.0.4) en lugar de @latest, para evitar romper integraciones al actualizar automáticamente.\n\n#### Unpkg\n\n```\n<script src=\"https://unpkg.com/recurrente-checkout@latest/recurrente-checkout.js\"></script>\n\n ```\n\n#### jsDelivr\n\n```\n<script src=\"https://cdn.jsdelivr.net/npm/recurrente-checkout@latest/recurrente-checkout.js\"></script>\n\n ```\n\n¿Dónde aparece el checkout?\n\nEl checkout de Recurrente se renderiza como un iframe que se inserta automáticamente en el elemento HTML con el ID `recurrente-checkout-container`. Asegúrate de tener este elemento en tu página:\n\n``` html\n<div class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; id=\"recurrente-checkout-container\"></div>\n\n ```\n\nEl iframe se ajustará automáticamente al tamaño del contenedor y será responsive. Puedes personalizar la apariencia aplicando estilos CSS al contenedor.\n\n### ES6 Modules (Recomendado)\n\n``` javascript\nimport RecurrenteCheckout from 'recurrente-checkout';\nRecurrenteCheckout.load({\n  url: \"https://app.recurrente.com/checkout-session/ch_1234\",\n  onSuccess: function(paymentData) {\n    console.log('Pago exitoso:', paymentData);\n    // Manejar pago exitoso\n    // ej., redirigir a página de éxito, actualizar UI, etc.\n  },\n  onFailure: function(error) {\n    console.log('Pago fallido:', error);\n    // Manejar pago fallido\n    // ej., mostrar mensaje de error, opción de reintentar, etc.\n  },\n  onPaymentInProgress: function() {\n    console.log('Pago con transferencia bancaria en proceso');\n    // Este callback se ejecuta solo para transferencias bancarias\n    // El pago puede tomar hasta 24 horas en procesarse\n    // ej., mostrar mensaje informativo, enviar email de confirmación, etc.\n  }\n});\n\n ```\n\n### Importación Nominal\n\n``` javascript\nimport { loadRecurrenteCheckout } from 'recurrente-checkout';\nloadRecurrenteCheckout({\n  url: \"https://app.recurrente.com/checkout-session/ch_1234\",\n  onSuccess: function(paymentData) {\n    console.log('Pago exitoso:', paymentData);\n  },\n  onFailure: function(error) {\n    console.log('Pago fallido:', error);\n  },\n  onPaymentInProgress: function() {\n    console.log('Pago con transferencia bancaria en proceso');\n    // Solo para transferencias bancarias (puede tomar hasta 24h)\n  }\n});\n\n ```\n\n### CommonJS\n\n``` javascript\nconst RecurrenteCheckout = require('recurrente-checkout');\nRecurrenteCheckout.load({\n  url: \"https://app.recurrente.com/checkout-session/ch_1234\",\n  onSuccess: function(paymentData) {\n    console.log('Pago exitoso:', paymentData);\n  },\n  onFailure: function(error) {\n    console.log('Pago fallido:', error);\n  },\n  onPaymentInProgress: function() {\n    console.log('Pago con transferencia bancaria en proceso');\n    // Solo para transferencias bancarias (puede tomar hasta 24h)\n  }\n});\n\n ```\n\n### Navegador (Global)\n\n``` javascript\n<script src=\"https://unpkg.com/recurrente-checkout@latest/recurrente-checkout.js\"></script>\n<script>\n  RecurrenteCheckout.load({\n    url: \"https://app.recurrente.com/s/your-checkout-url\",\n    onSuccess: function(paymentData) {\n      console.log('Pago exitoso:', paymentData);\n    },\n    onFailure: function(error) {\n      console.log('Pago fallido:', error);\n    },\n    onPaymentInProgress: function() {\n      console.log('Pago con transferencia bancaria en proceso');\n      // Solo para transferencias bancarias (puede tomar hasta 24h)\n    }\n  });\n</script>\n\n ```\n\n## Integración Rápida\n\n### 1\\. Incluir la Biblioteca JavaScript\n\nElige uno de los métodos de instalación anteriores.\n\n### 2\\. Inicializar el Checkout\n\nElige uno de los dos métodos de integración:\n\n#### Método A: URL de Checkout Directa\n\n``` javascript\nRecurrenteCheckout.load({\n  url: \"https://app.recurrente.com/checkout-session/ch_1234\",\n  onSuccess: function(paymentData) {\n    console.log('Pago exitoso:', paymentData.checkoutId);\n    // Manejar pago exitoso\n    // ej., redirigir a página de éxito, actualizar UI, etc.\n  },\n  onFailure: function(data) {\n    console.log('Pago fallido:', data.error);\n    // Manejar pago fallido\n    // ej., mostrar mensaje de error, opción de reintentar, etc.\n  },\n  onPaymentInProgress: function() {\n    console.log('Pago con transferencia bancaria en proceso');\n    // Este callback se ejecuta solo para transferencias bancarias\n    // El pago puede tomar hasta 24 horas en procesarse\n    // ej., mostrar mensaje informativo, enviar email de confirmación, etc.\n  }\n});\n\n ```\n\n#### Método B: URL de Producto\n\nTambién puedes usar una URL de producto con el formato `https://app.recurrente.com/s/{organization}/{product-slug}`:\n\n``` javascript\nRecurrenteCheckout.load({\n  url: \"https://app.recurrente.com/s/mi-cuenta/mi-producto\",\n  onSuccess: function(paymentData) {\n    console.log('Pago exitoso:', paymentData);\n    // Manejar pago exitoso\n    // ej., redirigir a página de éxito, actualizar UI, etc.\n  },\n  onFailure: function(error) {\n    console.log('Pago fallido:', error);\n    // Manejar pago fallido\n    // ej., mostrar mensaje de error, opción de reintentar, etc.\n  },\n  onPaymentInProgress: function() {\n    console.log('Pago con transferencia bancaria en proceso');\n    // Este callback se ejecuta solo para transferencias bancarias\n    // El pago puede tomar hasta 24 horas en procesarse\n    // ej., mostrar mensaje informativo, enviar email de confirmación, etc.\n  }\n});\n\n ```\n\n**Nota**: Reemplaza `mi-cuenta` con tu slug de organización y `mi-producto` con tu slug de producto."
+		},
+		{
+			"name": "Tokenized Payments",
+			"item": [
+				{
+					"name": "Create a one time payment (amount and currency)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "payment_method_id",
+									"value": "pay_m_l1aqgfoq",
+									"description": "Encuentra este valor en el payload de un webhook exitoso, o al hacer GET /checkout en un checkout exitoso",
+									"type": "text"
+								},
+								{
+									"key": "items[][currency]",
+									"value": "GTQ",
+									"description": "La moneda a cobrar.\n\nPosibles valores son:\n- GTQ\n- USD",
+									"type": "text"
+								},
+								{
+									"key": "items[][amount_in_cents]",
+									"value": "3000",
+									"description": "Monto a cobrar en centavos.",
+									"type": "text"
+								},
+								{
+									"key": "items[][name]",
+									"value": "One Ripe Banana",
+									"description": "(Opcional) El nombre del producto.",
+									"type": "text"
+								},
+								{
+									"key": "items[][image_url]",
+									"value": "https://source.unsplash.com/400x400/?banana",
+									"description": "(Opcional) URL de la imagen del producto.",
+									"type": "text"
+								},
+								{
+									"key": "items[][quantity]",
+									"value": "1",
+									"description": "(Opcional) Cantidad. \n\nSi no incluyes una, el default es 1.\n\nEl valor mínimo es 1 y el valor máximo es 9.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/one_time_payments/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"one_time_payments",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"items\": [\n    {\n      \"name\": \"One Ripe Banana\",\n      \"currency\": \"GTQ\",\n      \"amount_in_cents\": 3000,\n      \"image_url\": \"https://source.unsplash.com/400x400/?banana\",\n      \"quantity\": 1\n    }\n  ],\n  \"success_url\": \"https://www.google.com\",\n  \"cancel_url\": \"https://www.amazon.com\",\n  \"user_id\": \"us_123456\",\n  \"metadata\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/one_time_payments",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"one_time_payments"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"on_123456789\",\n    \"status\": \"paid\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create a one time payment (Product ID)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-PUBLIC-KEY",
+								"value": "{{recurrente_public_key}}",
+								"type": "text"
+							},
+							{
+								"key": "X-SECRET-KEY",
+								"value": "{{recurrente_private_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "payment_method_id",
+									"value": "pay_m_l1aqgfoq",
+									"description": "Encuentra este valor en el payload de un webhook exitoso, o al hacer GET /checkout en un checkout exitoso",
+									"type": "text"
+								},
+								{
+									"key": "items[][product_id]",
+									"value": "prod_1234567",
+									"description": "Crea un producto primero, y luego utiliza el ID del producto.",
+									"type": "text"
+								},
+								{
+									"key": "items[][quantity]",
+									"value": "1",
+									"description": "(Opcional) Cantidad. \nSi no incluyes una, el default es 1.\nEl valor mínimo es 1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://app.recurrente.com/api/checkouts/",
+							"protocol": "https",
+							"host": [
+								"app",
+								"recurrente",
+								"com"
+							],
+							"path": [
+								"api",
+								"checkouts",
+								""
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Respuesta exitosa",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "X-PUBLIC-KEY",
+										"value": "{{recurrente_public_key}}",
+										"type": "text"
+									},
+									{
+										"key": "X-SECRET-KEY",
+										"value": "{{recurrente_private_key}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"items\": [\n    {\n       \"product_id\": \"prod_123456\"\n    }\n  ],\n  \"metadata\": {}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://app.recurrente.com/api/one_time_payments",
+									"protocol": "https",
+									"host": [
+										"app",
+										"recurrente",
+										"com"
+									],
+									"path": [
+										"api",
+										"one_time_payments"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"id\": \"on_123456789\",\n    \"status\": \"paid\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Si quieres hacer un cobro a un cliente existente, usa tokenized payments."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://app.recurrente.com/api"
+		},
+		{
+			"key": "checkoutId",
+			"value": "ch_eegw9j5zgqoae3ms",
+			"disabled": true
+		},
+		{
+			"key": "productId",
+			"value": "prod_9lstwgbr",
+			"disabled": true
+		},
+		{
+			"key": "priceId",
+			"value": "price_mirvwr9y",
+			"disabled": true
+		}
+	]
+}
