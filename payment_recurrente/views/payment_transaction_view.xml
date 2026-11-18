@@ -26,6 +26,12 @@
                        readonly="1"
                        invisible="provider_code != 'recurrente'"
                        groups="base.group_no_one"/>
+                <field name="recurrente_fee"
+                       readonly="1"
+                       invisible="provider_code != 'recurrente'"/>
+                <field name="recurrente_vat_withheld"
+                       readonly="1"
+                       invisible="provider_code != 'recurrente'"/>
             </field>
             <xpath expr="//sheet" position="inside">
                 <notebook>
