@@ -90,3 +90,15 @@ msgstr "El código técnico de este proveedor de pagos."
 #: model:payment.provider,name:payment_recurrente.payment_provider_recurrente
 msgid "Recurrente"
 msgstr ""
+
+#. module: payment_recurrente
+#. odoo-python
+#: code:addons/payment_recurrente/models/payment_transaction.py:0
+msgid "Recurrente gateway fee - %s"
+msgstr "Comisión pasarela Recurrente - %s"
+
+#. module: payment_recurrente
+#. odoo-python
+#: code:addons/payment_recurrente/models/payment_transaction.py:0
+msgid "Card VAT withholding - %s"
+msgstr "Retención IVA de tarjeta - %s"

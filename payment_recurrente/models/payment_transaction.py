@@ -280,58 +280,54 @@ class PaymentTransaction(models.Model):
             _logger.error(f"Error checking payment status for {self.id_recurrente_checkout}: {e}")
 
     def _create_payment(self, **extra_create_values):
+        """Override of `account_payment` to book Recurrente's fee and VAT withholding.
+
+        The payment is created for the net amount actually deposited by Recurrente; the fee
+        (expense) and the VAT withheld (asset) become write-off lines so the customer is still
+        credited the gross amount. Amounts whose account is not configured on the provider are
+        left inside the payment (no write-off), so the entry always stays balanced.
+        """
         self.ensure_one()
-        if self.provider_code != 'recurrente':
-            return super()._create_payment(**extra_create_values)
-
-        fee = self.recurrente_fee or 0.0
-        vat_withheld = self.recurrente_vat_withheld or 0.0
-
-        # If there are no amounts to separate, proceed normally
-        if not fee and not vat_withheld:
+        if self.provider_code != 'recurrente' or self.amount <= 0:
             return super()._create_payment(**extra_create_values)
 
         provider = self.provider_id
-        write_off_line_vals = []
-        company_currency = self.company_id.currency_id
         tx_currency = self.currency_id
+        company = provider.company_id or self.company_id
+        conversion_date = (self.last_state_change or fields.Datetime.now()).date()
 
-        # 1. Calculate the net amount that should hit the Outstanding Receipts/Transit account
-        net_amount = self.amount - fee - vat_withheld
-
-        # 2. Add Gateway Fee Commission Line (Debit)
-        if fee and provider.recurrente_commission_account_id:
-            fee_balance = tx_currency._convert(fee, company_currency, self.company_id, self.date or fields.Date.context_today(self))
+        write_off_line_vals = []
+        for amount, account, partner, label in (
+            (
+                self.recurrente_fee,
+                provider.recurrente_commission_account_id,
+                provider.recurrente_commission_partner_id,
+                _("Recurrente gateway fee - %s", self.reference),
+            ),
+            (
+                self.recurrente_vat_withheld,
+                provider.recurrente_vat_withholding_account_id,
+                provider.recurrente_vat_withholding_partner_id,
+                _("Card VAT withholding - %s", self.reference),
+            ),
+        ):
+            if not amount or not account:
+                continue
             write_off_line_vals.append({
-                'name': _("Comisión Pasarela Recurrente - %s") % self.reference,
-                'amount_currency': fee if self.amount > 0 else -fee,
+                'name': label,
+                'account_id': account.id,
+                'partner_id': (partner or self.partner_id.commercial_partner_id).id,
                 'currency_id': tx_currency.id,
-                'debit': fee_balance if fee_balance > 0.0 else 0.0,
-                'credit': -fee_balance if fee_balance < 0.0 else 0.0,
-                'balance': fee_balance,
-                'partner_id': provider.recurrente_commission_partner_id.id or self.partner_id.id,
-                'account_id': provider.recurrente_commission_account_id.id,
+                'amount_currency': amount,
+                'balance': tx_currency._convert(amount, company.currency_id, company, conversion_date),
             })
 
-        # 3. Add VAT Withholding Asset Line (Debit)
-        if vat_withheld and provider.recurrente_vat_withholding_account_id:
-            vat_balance = tx_currency._convert(vat_withheld, company_currency, self.company_id, self.date or fields.Date.context_today(self))
-            write_off_line_vals.append({
-                'name': _("Retención IVA de Tarjeta - %s") % self.reference,
-                'amount_currency': vat_withheld if self.amount > 0 else -vat_withheld,
-                'currency_id': tx_currency.id,
-                'debit': vat_balance if vat_balance > 0.0 else 0.0,
-                'credit': -vat_balance if vat_balance < 0.0 else 0.0,
-                'balance': vat_balance,
-                'partner_id': provider.recurrente_vat_withholding_partner_id.id or self.partner_id.id,
-                'account_id': provider.recurrente_vat_withholding_account_id.id,
-            })
+        if not write_off_line_vals:
+            return super()._create_payment(**extra_create_values)
 
-        # 4. Modify creation values for the payment
-        extra_vals = dict(extra_create_values)
-        extra_vals.update({
-            'amount': abs(net_amount),  # Net amount goes into the Outstanding Receipts/Bank transit account
-            'write_off_line_vals': write_off_line_vals,  # Applied differences to balance the entry for the full Gross amount
+        net_amount = self.amount - sum(line['amount_currency'] for line in write_off_line_vals)
+        return super()._create_payment(**{
+            **extra_create_values,
+            'amount': net_amount,
+            'write_off_line_vals': write_off_line_vals,
         })
-
-        return super()._create_payment(**extra_vals)
