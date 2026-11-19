@@ -3,7 +3,9 @@ import pprint
 
 from werkzeug import urls
 
-from odoo import _, fields, models
+from datetime import timedelta
+
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 from odoo.addons.payment import utils as payment_utils
@@ -24,6 +26,13 @@ class PaymentTransaction(models.Model):
         currency_field='currency_id',
         groups='base.group_system',
         help="The gateway processing fee charged by Recurrente."
+    )
+    recurrente_refunded_to_account = fields.Monetary(
+        string="Debited from Recurrente Account",
+        currency_field='currency_id',
+        groups='base.group_system',
+        help="Refunds: amount Recurrente took from the merchant balance (may differ from the "
+             "amount returned to the customer because of fees).",
     )
     recurrente_vat_withheld = fields.Monetary(
         string="Recurrente VAT Withheld",
@@ -108,7 +117,10 @@ class PaymentTransaction(models.Model):
         """
         self.ensure_one()
         request_status = notification_data["status"]
-        if request_status in const.PAYMENT_STATUS_MAPPING['pending'] and self.state == 'draft':
+        if request_status == 'request_success' and self.state in ('draft', 'pending'):
+            # Webhooks may come later (and never in sandbox): ask the API right away.
+            self.action_check_payment_status()
+        elif request_status in const.PAYMENT_STATUS_MAPPING['pending'] and self.state == 'draft':
             self._set_pending(_("The payment is in process."))
         elif request_status in const.PAYMENT_STATUS_MAPPING['cancel'] and self.state == 'draft':
             self._set_canceled(_("The client went back from the Recurrente's checkout."))
@@ -204,8 +216,21 @@ class PaymentTransaction(models.Model):
             if failure_reason:
                 self._save_failure_reason(failure_reason)
         elif payment_status in const.PAYMENT_STATUS_MAPPING['done']:
-            self._set_done()
+            # Never trust the webhook body alone: the checkout id is visible to the customer.
+            if self._recurrente_checkout_status() == const.CHECKOUT_PAID:
+                self._set_done()
+            else:
+                _logger.warning(
+                    "Recurrente: ignoring '%s' for %s: the API does not report the checkout as paid.",
+                    payment_status, self.reference,
+                )
         elif payment_status in const.PAYMENT_STATUS_MAPPING['error']:
+            if self._recurrente_checkout_status() == const.CHECKOUT_PAID:
+                _logger.warning(
+                    "Recurrente: ignoring '%s' for %s: the API reports the checkout as paid.",
+                    payment_status, self.reference,
+                )
+                return
             self._set_error(_(
                 f"An error occurred during the processing of your payment (status {payment_status}). Please try again.\nReason: {notification_data.get('failure_reason', 'No reason.')}",
             ))
@@ -227,6 +252,39 @@ class PaymentTransaction(models.Model):
         tx._process_webhook_data(notification_data)
         # tx._execute_callback()
         return tx
+
+    def _recurrente_checkout_status(self):
+        """ Return the checkout status according to the API (``None`` if it cannot be read). """
+        self.ensure_one()
+        if not self.id_recurrente_checkout:
+            return None
+        try:
+            data = self.provider_id._recurrente_make_request(
+                f"checkouts/{self.id_recurrente_checkout}", method="GET"
+            )
+        except ValidationError:
+            _logger.exception("Recurrente: could not read checkout %s", self.id_recurrente_checkout)
+            return None
+        return data.get('status')
+
+    @api.model
+    def _cron_recurrente_check_status(self):
+        """ Poll open checkouts and refunds: covers lost webhooks and sandbox (no webhooks). """
+        since = fields.Datetime.now() - timedelta(days=const.POLL_DAYS)
+        txs = self.search([
+            ('provider_code', '=', 'recurrente'),
+            ('state', 'in', ('draft', 'pending')),
+            ('create_date', '>=', since),
+        ])
+        for tx in txs:
+            try:
+                with self.env.cr.savepoint():
+                    if tx.operation == 'refund':
+                        tx._recurrente_check_refund_status()
+                    elif tx.id_recurrente_checkout:
+                        tx.action_check_payment_status()
+            except Exception:
+                _logger.exception("Recurrente: status check failed for %s", tx.reference)
 
     def action_check_payment_status(self):
         """ Manually check the payment status from Recurrente API. """
@@ -331,3 +389,51 @@ class PaymentTransaction(models.Model):
             'amount': net_amount,
             'write_off_line_vals': write_off_line_vals,
         })
+
+    # === REFUNDS === #
+
+    def _send_refund_request(self, amount_to_refund=None):
+        """ Override of `payment` to refund a whole Recurrente payment through the API. """
+        if self.provider_code != 'recurrente':
+            return super()._send_refund_request(amount_to_refund=amount_to_refund)
+        self.ensure_one()
+        if amount_to_refund and self.currency_id.compare_amounts(amount_to_refund, self.amount) != 0:
+            raise UserError(_("Recurrente only refunds the full amount of a payment."))
+        if not self.provider_reference:
+            raise UserError(_(
+                "The transaction %s has no Recurrente payment id: it cannot be refunded from Odoo.",
+                self.reference,
+            ))
+        refund_tx = super()._send_refund_request(amount_to_refund=amount_to_refund)
+        data = self.provider_id._recurrente_make_request(
+            'refunds/', payload={'payment_intent_id': self.provider_reference}
+        )
+        refund_tx._recurrente_apply_refund_data(data)
+        return refund_tx
+
+    def _recurrente_apply_refund_data(self, data):
+        self.ensure_one()
+        if data.get('id'):
+            self.provider_reference = data['id']
+        account_cents = data.get('account_refunded_amount_in_cents')
+        if account_cents is not None:
+            self.recurrente_refunded_to_account = -float(account_cents) / 100.0
+        status = (data.get('status') or '').lower()
+        if status in const.REFUND_DONE:
+            self._set_done()
+        elif status in const.REFUND_PENDING:
+            self._set_pending()
+        elif status in const.REFUND_FAILED:
+            self._set_error(_("Recurrente rejected the refund (status %s).", status))
+        else:
+            _logger.warning("Recurrente: unknown refund status %r for %s", status, self.reference)
+            self._set_pending()
+
+    def _recurrente_check_refund_status(self):
+        self.ensure_one()
+        if not self.provider_reference:
+            return
+        data = self.provider_id._recurrente_make_request(
+            f"refunds/{self.provider_reference}", method='GET'
+        )
+        self._recurrente_apply_refund_data(data)
