@@ -35,6 +35,17 @@ class RecurrenteController(http.Controller):
         :return: An empty string to acknowledge the notification.
         :rtype: str
         """
+        body = request.httprequest.get_data()
+        providers = request.env['payment.provider'].sudo().search([
+            ('code', '=', 'recurrente'), ('state', '!=', 'disabled'),
+        ])
+        signed = providers.filtered(lambda p: p.recurrente_webhook_secret)
+        if signed and not any(
+            p._recurrente_verify_signature(request.httprequest.headers, body) for p in signed
+        ):
+            _logger.warning("Recurrente: webhook rejected, invalid or missing signature.")
+            raise Forbidden()
+
         data = request.get_json_data()
         _logger.info(f"Notification received from Recurrente with data:\n{pprint.pformat(data)}")
 
