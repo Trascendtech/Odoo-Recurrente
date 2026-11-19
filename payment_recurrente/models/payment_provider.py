@@ -1,5 +1,10 @@
+import base64
+import binascii
+import hashlib
+import hmac
 import logging
 import pprint
+import time
 
 import requests
 from werkzeug.urls import url_join
@@ -22,6 +27,13 @@ class PaymentProvider(models.Model):
     recurrente_public_key = fields.Char(string="Recurrente Public Key", groups='base.group_system')
     recurrente_secret_key = fields.Char(string="Recurrente Secret Key", groups='base.group_system')
     recurrente_setup_token = fields.Char(string="Recurrente Setup Token", groups='base.group_system')
+    recurrente_webhook_secret = fields.Char(
+        string="Recurrente Webhook Signing Secret",
+        groups='base.group_system',
+        help="Signing secret of the webhook endpoint (starts with 'whsec_'). When set, webhooks "
+             "without a valid signature are rejected. Payments are always confirmed against the "
+             "API before being marked as paid.",
+    )
     allow_transfers = fields.Boolean(string="Allow Transfers", groups='base.group_system')
     allow_installments = fields.Boolean(string="Allow Installments", groups='base.group_system')
     installment_ids = fields.Many2many(comodel_name="payment.installment_recurrente", string="Installments", groups='base.group_system')
@@ -54,6 +66,44 @@ class PaymentProvider(models.Model):
         help="Partner used for the VAT withholding line (e.g. SAT or Recurrente S.A.)."
     )
 
+    def _compute_feature_support_fields(self):
+        """ Override of `payment` to enable full refunds (the API refunds a whole payment). """
+        super()._compute_feature_support_fields()
+        self.filtered(lambda p: p.code == 'recurrente').update({'support_refund': 'full_only'})
+
+    def _recurrente_verify_signature(self, headers, body):
+        """ Verify a webhook signature (Svix scheme used by Recurrente).
+
+        The signed content is ``{id}.{timestamp}.{body}``; ``svix-signature`` holds one or more
+        ``v1,<base64 HMAC-SHA256>`` values computed with the base64 secret after ``whsec_``.
+
+        :return: True when no secret is configured or the signature is valid.
+        """
+        self.ensure_one()
+        secret = self.sudo().recurrente_webhook_secret
+        if not secret:
+            return True
+        msg_id = headers.get('svix-id') or headers.get('webhook-id')
+        timestamp = headers.get('svix-timestamp') or headers.get('webhook-timestamp')
+        signatures = headers.get('svix-signature') or headers.get('webhook-signature') or ''
+        if not (msg_id and timestamp and signatures):
+            return False
+        try:
+            if abs(time.time() - int(timestamp)) > const.WEBHOOK_TOLERANCE_SECONDS:
+                return False
+            key = base64.b64decode(secret.split('_', 1)[1] if secret.startswith('whsec_') else secret)
+        except (ValueError, binascii.Error):
+            return False
+        if isinstance(body, str):
+            body = body.encode()
+        signed = f"{msg_id}.{timestamp}.".encode() + body
+        expected = base64.b64encode(hmac.new(key, signed, hashlib.sha256).digest()).decode()
+        for candidate in signatures.split():
+            version, _sep, value = candidate.partition(',')
+            if version == 'v1' and hmac.compare_digest(value, expected):
+                return True
+        return False
+
     @api.model
     def _get_compatible_providers(self, *args, is_validation=False, **kwargs):
         """ Override of `payment` to filter out Recurrente providers for validation operations. """
@@ -72,7 +122,7 @@ class PaymentProvider(models.Model):
             )
         return supported_currencies
 
-    def _recurrente_make_request(self, endpoint, headers={}, payload={}, method='POST'):
+    def _recurrente_make_request(self, endpoint, headers=None, payload=None, method='POST'):
         """ Make a request to Recurrente API at the specified endpoint.
 
         Note: self.ensure_one()
@@ -85,6 +135,8 @@ class PaymentProvider(models.Model):
         :raise ValidationError: If an HTTP error occurs.
         """
         self.ensure_one()
+        headers = dict(headers or {})
+        payload = payload or {}
 
         url = url_join('https://app.recurrente.com/api/', endpoint)
         # Set authentication headers
@@ -97,6 +149,8 @@ class PaymentProvider(models.Model):
         try:
             if method == 'GET':
                 response = requests.get(url, params=payload, headers=headers, timeout=10)
+            elif method == 'POST_FORM':
+                response = requests.post(url, data=payload, headers=headers, timeout=10)
             else:
                 response = requests.post(url, json=payload, headers=headers, timeout=10)
             try:

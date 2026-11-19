@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Existing databases: the payment method record is noupdate, enable full refunds. -->
+    <function model="payment.method" name="write">
+        <value eval="[ref('payment_recurrente.payment_method_recurrente')]"/>
+        <value eval="{'support_refund': 'full_only'}"/>
+    </function>
+
+    <record id="ir_cron_recurrente_check_status" model="ir.cron">
+        <field name="name">Recurrente: check open payments and refunds</field>
+        <field name="model_id" ref="payment.model_payment_transaction"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_recurrente_check_status()</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>
