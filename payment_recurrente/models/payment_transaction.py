@@ -19,6 +19,18 @@ class PaymentTransaction(models.Model):
     url_recurrente_checkout = fields.Char(string="Recurrente Checkout URL")
     product_recurrente_checkout = fields.Char(string="Recurrente Checkout Product")
     payment_intent_failure_reasons = fields.Html(string="Payment Intent Failure Reasons", default="<ul></ul>", help="Here you can find the multiple reasons why the client did have payment problems.")
+    recurrente_fee = fields.Monetary(
+        string="Recurrente Fee",
+        currency_field='currency_id',
+        groups='base.group_system',
+        help="The gateway processing fee charged by Recurrente."
+    )
+    recurrente_vat_withheld = fields.Monetary(
+        string="Recurrente VAT Withheld",
+        currency_field='currency_id',
+        groups='base.group_system',
+        help="The VAT amount withheld by Recurrente (Guatemala regulation)."
+    )
 
     def _get_specific_rendering_values(self, processing_values):
         """ Override of payment to return Recurrente-specific rendering values.
@@ -167,6 +179,22 @@ class PaymentTransaction(models.Model):
         # Update the provider reference.
         self.provider_reference = payment_id
 
+        # Extract and save fee and vat_withheld if available
+        fee_cents = None
+        vat_cents = None
+        if isinstance(payment, dict):
+            fee_cents = payment.get("fee")
+            vat_cents = payment.get("vat_withheld")
+        if fee_cents is None:
+            fee_cents = notification_data.get("fee")
+        if vat_cents is None:
+            vat_cents = notification_data.get("vat_withheld")
+
+        if fee_cents is not None:
+            self.recurrente_fee = float(fee_cents) / 100.0
+        if vat_cents is not None:
+            self.recurrente_vat_withheld = float(vat_cents) / 100.0
+
         # Update the payment state.
         payment_status = notification_data['event_type'].lower()
         failure_reason = notification_data.get('failure_reason', 'No reason.')
@@ -215,6 +243,29 @@ class PaymentTransaction(models.Model):
             _logger.info(f"Checkout data: {checkout_data}")
             status = checkout_data.get("status")
             if status == "paid":
+                payment_info = checkout_data.get("payment")
+                if isinstance(payment_info, dict) and payment_info.get("id"):
+                    payment_id = payment_info.get("id")
+                    self.provider_reference = payment_id
+                    
+                    # Fetch payment details from Recurrente API using GET invoices/{payment_id}
+                    try:
+                        _logger.info(f"Fetching invoice/payment details for {payment_id}")
+                        payment_details = self.provider_id._recurrente_make_request(
+                            f"invoices/{payment_id}", method="GET"
+                        )
+                        _logger.info(f"Payment details response: {payment_details}")
+                        if isinstance(payment_details, dict):
+                            fee_cents = payment_details.get("fee") or payment_details.get("payment", {}).get("fee")
+                            vat_cents = payment_details.get("vat_withheld") or payment_details.get("payment", {}).get("vat_withheld")
+                            
+                            if fee_cents is not None:
+                                self.recurrente_fee = float(fee_cents) / 100.0
+                            if vat_cents is not None:
+                                self.recurrente_vat_withheld = float(vat_cents) / 100.0
+                    except Exception as e:
+                        _logger.error(f"Error fetching payment details for payment {payment_id}: {e}")
+
                 self._set_done()
             elif status == "unpaid":
                 # If it's already pending, we don't need to do anything
@@ -227,3 +278,56 @@ class PaymentTransaction(models.Model):
                 self._set_canceled()
         except Exception as e:
             _logger.error(f"Error checking payment status for {self.id_recurrente_checkout}: {e}")
+
+    def _create_payment(self, **extra_create_values):
+        """Override of `account_payment` to book Recurrente's fee and VAT withholding.
+
+        The payment is created for the net amount actually deposited by Recurrente; the fee
+        (expense) and the VAT withheld (asset) become write-off lines so the customer is still
+        credited the gross amount. Amounts whose account is not configured on the provider are
+        left inside the payment (no write-off), so the entry always stays balanced.
+        """
+        self.ensure_one()
+        if self.provider_code != 'recurrente' or self.amount <= 0:
+            return super()._create_payment(**extra_create_values)
+
+        provider = self.provider_id
+        tx_currency = self.currency_id
+        company = provider.company_id or self.company_id
+        conversion_date = (self.last_state_change or fields.Datetime.now()).date()
+
+        write_off_line_vals = []
+        for amount, account, partner, label in (
+            (
+                self.recurrente_fee,
+                provider.recurrente_commission_account_id,
+                provider.recurrente_commission_partner_id,
+                _("Recurrente gateway fee - %s", self.reference),
+            ),
+            (
+                self.recurrente_vat_withheld,
+                provider.recurrente_vat_withholding_account_id,
+                provider.recurrente_vat_withholding_partner_id,
+                _("Card VAT withholding - %s", self.reference),
+            ),
+        ):
+            if not amount or not account:
+                continue
+            write_off_line_vals.append({
+                'name': label,
+                'account_id': account.id,
+                'partner_id': (partner or self.partner_id.commercial_partner_id).id,
+                'currency_id': tx_currency.id,
+                'amount_currency': amount,
+                'balance': tx_currency._convert(amount, company.currency_id, company, conversion_date),
+            })
+
+        if not write_off_line_vals:
+            return super()._create_payment(**extra_create_values)
+
+        net_amount = self.amount - sum(line['amount_currency'] for line in write_off_line_vals)
+        return super()._create_payment(**{
+            **extra_create_values,
+            'amount': net_amount,
+            'write_off_line_vals': write_off_line_vals,
+        })

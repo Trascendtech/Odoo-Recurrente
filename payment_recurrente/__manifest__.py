@@ -3,7 +3,7 @@
     'version': '1.0',
     'category': 'Accounting/Payment Providers',
     'summary': "Integration with Recurrente payment gateway.",
-    'depends': ['payment'],
+    'depends': ['payment', 'account_payment'],
     'author': 'tipi(code)',
     'data': [
         'security/ir.model.access.csv',

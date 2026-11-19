@@ -26,6 +26,34 @@ class PaymentProvider(models.Model):
     allow_installments = fields.Boolean(string="Allow Installments", groups='base.group_system')
     installment_ids = fields.Many2many(comodel_name="payment.installment_recurrente", string="Installments", groups='base.group_system')
 
+    # Recurrente accounting settings
+    recurrente_commission_account_id = fields.Many2one(
+        comodel_name='account.account',
+        string="Recurrente Commission Account",
+        groups='base.group_system',
+        domain="[('deprecated', '=', False), ('company_ids', '=', company_id)]",
+        help="Account used to record payment gateway commission/fees."
+    )
+    recurrente_commission_partner_id = fields.Many2one(
+        comodel_name='res.partner',
+        string="Recurrente Commission Partner",
+        groups='base.group_system',
+        help="Partner used for the commission/fee line (e.g. Recurrente S.A.)."
+    )
+    recurrente_vat_withholding_account_id = fields.Many2one(
+        comodel_name='account.account',
+        string="Recurrente VAT Withholding Account",
+        groups='base.group_system',
+        domain="[('deprecated', '=', False), ('company_ids', '=', company_id)]",
+        help="Account used to record VAT withholdings received."
+    )
+    recurrente_vat_withholding_partner_id = fields.Many2one(
+        comodel_name='res.partner',
+        string="Recurrente VAT Withholding Partner",
+        groups='base.group_system',
+        help="Partner used for the VAT withholding line (e.g. SAT or Recurrente S.A.)."
+    )
+
     @api.model
     def _get_compatible_providers(self, *args, is_validation=False, **kwargs):
         """ Override of `payment` to filter out Recurrente providers for validation operations. """

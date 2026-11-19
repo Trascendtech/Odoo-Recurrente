@@ -21,10 +21,20 @@
                 </group>
             </group>
             <group name="payment_followup" position="after">
-                <group string="Allow Transfers / Installments" name="allow_payment_transfers_installments">
+                <group string="Allow Transfers / Installments" name="allow_payment_transfers_installments" invisible="code != 'recurrente'">
                     <field name="allow_transfers"/>
                     <field name="allow_installments"/>
                     <field name="installment_ids" invisible="not allow_installments" widget="many2many_tags" options="{'no_create_edit': 'True', 'no_create': 'True'}"/>
+                </group>
+                <group string="Contabilidad Recurrente" name="recurrente_accounting" invisible="code != 'recurrente'">
+                    <group string="Gasto por Comisión">
+                        <field name="recurrente_commission_account_id"/>
+                        <field name="recurrente_commission_partner_id"/>
+                    </group>
+                    <group string="Activo por Retención de IVA">
+                        <field name="recurrente_vat_withholding_account_id"/>
+                        <field name="recurrente_vat_withholding_partner_id"/>
+                    </group>
                 </group>
             </group>
         </field>
