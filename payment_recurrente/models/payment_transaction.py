@@ -21,6 +21,10 @@ class PaymentTransaction(models.Model):
     url_recurrente_checkout = fields.Char(string="Recurrente Checkout URL")
     product_recurrente_checkout = fields.Char(string="Recurrente Checkout Product")
     payment_intent_failure_reasons = fields.Html(string="Payment Intent Failure Reasons", default="<ul></ul>", help="Here you can find the multiple reasons why the client did have payment problems.")
+    recurrente_intent_id = fields.Char(
+        string="Recurrente Intent ID", readonly=True, copy=False,
+        help="Payment intent (in_…) of the paid checkout: refunds and the fee details use it.",
+    )
     recurrente_fee = fields.Monetary(
         string="Recurrente Fee",
         currency_field='currency_id',
@@ -219,6 +223,7 @@ class PaymentTransaction(models.Model):
             # Never trust the webhook body alone: the checkout id is visible to the customer.
             if self._recurrente_checkout_status() == const.CHECKOUT_PAID:
                 self._set_done()
+                self._recurrente_fetch_intent()
             else:
                 _logger.warning(
                     "Recurrente: ignoring '%s' for %s: the API does not report the checkout as paid.",
@@ -235,10 +240,11 @@ class PaymentTransaction(models.Model):
                 f"An error occurred during the processing of your payment (status {payment_status}). Please try again.\nReason: {notification_data.get('failure_reason', 'No reason.')}",
             ))
         else:
-            _logger.warning(
-                f"Received data with invalid payment status ({payment_status}) for transaction with reference {self.reference}.",
+            # Recurrente sends more events than the ones of a payment (refunds, disputes, new
+            # names): never turn a transaction into an error because of one we do not know.
+            _logger.info(
+                "Recurrente: event '%s' ignored for transaction %s.", payment_status, self.reference,
             )
-            self._set_error("Recurrente: " + _(f"Unknown payment status: {payment_status}"))
 
     def _handle_webhook_data(self, notification_data):
         """ Match the transaction with the notification data, update its state and return it.
@@ -303,26 +309,8 @@ class PaymentTransaction(models.Model):
             if status == "paid":
                 payment_info = checkout_data.get("payment")
                 if isinstance(payment_info, dict) and payment_info.get("id"):
-                    payment_id = payment_info.get("id")
-                    self.provider_reference = payment_id
-                    
-                    # Fetch payment details from Recurrente API using GET invoices/{payment_id}
-                    try:
-                        _logger.info(f"Fetching invoice/payment details for {payment_id}")
-                        payment_details = self.provider_id._recurrente_make_request(
-                            f"invoices/{payment_id}", method="GET"
-                        )
-                        _logger.info(f"Payment details response: {payment_details}")
-                        if isinstance(payment_details, dict):
-                            fee_cents = payment_details.get("fee") or payment_details.get("payment", {}).get("fee")
-                            vat_cents = payment_details.get("vat_withheld") or payment_details.get("payment", {}).get("vat_withheld")
-                            
-                            if fee_cents is not None:
-                                self.recurrente_fee = float(fee_cents) / 100.0
-                            if vat_cents is not None:
-                                self.recurrente_vat_withheld = float(vat_cents) / 100.0
-                    except Exception as e:
-                        _logger.error(f"Error fetching payment details for payment {payment_id}: {e}")
+                    self.provider_reference = payment_info.get("id")
+                self._recurrente_apply_intent(self._recurrente_intent_from_checkout(checkout_data))
 
                 self._set_done()
             elif status == "unpaid":
@@ -390,6 +378,46 @@ class PaymentTransaction(models.Model):
             'write_off_line_vals': write_off_line_vals,
         })
 
+    # === PAYMENT INTENT === #
+
+    @staticmethod
+    def _recurrente_intent_from_checkout(checkout_data):
+        """ ``latest_intent.id`` (in_…) of a checkout read from GET /checkouts/{id}. """
+        intent = (checkout_data or {}).get('latest_intent')
+        intent_id = intent.get('id') if isinstance(intent, dict) else None
+        return intent_id if isinstance(intent_id, str) and intent_id.startswith('in_') else None
+
+    def _recurrente_apply_intent(self, intent_id):
+        """ Store the payment intent and its fee and VAT withheld (GET /intents/{id},
+        ``details.fee`` and ``details.vat_withheld`` in cents). Never blocks the payment. """
+        self.ensure_one()
+        if not intent_id:
+            return
+        self.recurrente_intent_id = intent_id
+        try:
+            data = self.provider_id._recurrente_make_request(f"intents/{intent_id}", method="GET")
+        except ValidationError:
+            _logger.warning("Recurrente: could not read intent %s for %s", intent_id, self.reference)
+            return
+        details = (data or {}).get('details') or {}
+        if details.get('fee') is not None:
+            self.recurrente_fee = float(details['fee']) / 100.0
+        if details.get('vat_withheld') is not None:
+            self.recurrente_vat_withheld = float(details['vat_withheld']) / 100.0
+
+    def _recurrente_fetch_intent(self):
+        """ The payment intent of the checkout, read from the API when it was not stored. """
+        self.ensure_one()
+        if not self.recurrente_intent_id and self.id_recurrente_checkout:
+            try:
+                checkout = self.provider_id._recurrente_make_request(
+                    f"checkouts/{self.id_recurrente_checkout}", method="GET"
+                )
+            except ValidationError:
+                return None
+            self._recurrente_apply_intent(self._recurrente_intent_from_checkout(checkout))
+        return self.recurrente_intent_id
+
     # === REFUNDS === #
 
     def _send_refund_request(self, amount_to_refund=None):
@@ -399,14 +427,18 @@ class PaymentTransaction(models.Model):
         self.ensure_one()
         if amount_to_refund and self.currency_id.compare_amounts(amount_to_refund, self.amount) != 0:
             raise UserError(_("Recurrente only refunds the full amount of a payment."))
-        if not self.provider_reference:
+        intent_id = self._recurrente_fetch_intent()
+        if not intent_id:
             raise UserError(_(
-                "The transaction %s has no Recurrente payment id: it cannot be refunded from Odoo.",
+                "The transaction %s has no Recurrente payment intent: it cannot be refunded from Odoo.",
                 self.reference,
             ))
         refund_tx = super()._send_refund_request(amount_to_refund=amount_to_refund)
+        # POST /refunds with the unified intent id (in_…); the key avoids a double refund if the
+        # request is repeated.
         data = self.provider_id._recurrente_make_request(
-            'refunds/', payload={'payment_intent_id': self.provider_reference}
+            'refunds', payload={'intent_id': intent_id},
+            headers={'Idempotency-Key': f"odoo-{refund_tx.reference}"},
         )
         refund_tx._recurrente_apply_refund_data(data)
         return refund_tx
