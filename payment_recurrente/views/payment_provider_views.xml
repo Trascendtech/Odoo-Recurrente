@@ -8,10 +8,11 @@
         <field name="arch" type="xml">
             <group name="provider_credentials" position='inside'>
                 <group invisible="code != 'recurrente'">
-                    <field name="recurrente_public_key" password="True"
-                           required="code == 'recurrente' and state != 'disabled'"/>
                     <field name="recurrente_secret_key" password="True"
+                           placeholder="sk_live_... / sk_test_..."
                            required="code == 'recurrente' and state != 'disabled'"/>
+                    <field name="recurrente_public_key" password="True"
+                           invisible="not recurrente_public_key"/>
                     <field name="recurrente_setup_token" password="True" readonly="True"/>
                     <field name="recurrente_webhook_secret" password="True"
                            placeholder="whsec_..."/>

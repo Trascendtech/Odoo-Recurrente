@@ -26,6 +26,9 @@
                        readonly="1"
                        invisible="provider_code != 'recurrente'"
                        groups="base.group_no_one"/>
+                <field name="recurrente_intent_id"
+                       invisible="provider_code != 'recurrente' or not recurrente_intent_id"
+                       groups="base.group_no_one"/>
                 <field name="recurrente_fee"
                        readonly="1"
                        invisible="provider_code != 'recurrente'"/>

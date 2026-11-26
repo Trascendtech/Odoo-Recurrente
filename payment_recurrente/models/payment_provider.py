@@ -24,7 +24,11 @@ class PaymentProvider(models.Model):
     code = fields.Selection(
         selection_add=[('recurrente', "Recurrente")], ondelete={'recurrente': 'set default'}
     )
-    recurrente_public_key = fields.Char(string="Recurrente Public Key", groups='base.group_system')
+    recurrente_public_key = fields.Char(
+        string="Recurrente Public Key", groups='base.group_system',
+        help="Only for old integrations: the Recurrente API now authenticates with the secret "
+             "key alone (X-SECRET-KEY).",
+    )
     recurrente_secret_key = fields.Char(string="Recurrente Secret Key", groups='base.group_system')
     recurrente_setup_token = fields.Char(string="Recurrente Setup Token", groups='base.group_system')
     recurrente_webhook_secret = fields.Char(
@@ -139,12 +143,11 @@ class PaymentProvider(models.Model):
         payload = payload or {}
 
         url = url_join('https://app.recurrente.com/api/', endpoint)
-        # Set authentication headers
-        auth_headers = {
-            "X-PUBLIC-KEY": self.recurrente_public_key,
-            "X-SECRET-KEY": self.recurrente_secret_key,
-        }
-        headers.update(auth_headers)
+        # Authentication: the secret key alone (sk_live_… or sk_test_… of a sandbox). The public
+        # key is only sent if an old integration still has one.
+        headers["X-SECRET-KEY"] = self.recurrente_secret_key
+        if self.recurrente_public_key:
+            headers["X-PUBLIC-KEY"] = self.recurrente_public_key
 
         try:
             if method == 'GET':
