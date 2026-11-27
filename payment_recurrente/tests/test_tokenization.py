@@ -53,6 +53,15 @@ class TestRecurrenteTokenization(RecurrenteApiCommon):
         )
         self.assertNotIn(self.provider, compatible)
 
+    def test_payment_method_can_save_cards(self):
+        """Payment methods in the portal only offers methods that support tokenization."""
+        method = self.env.ref('payment_recurrente.payment_method_recurrente')
+        self.assertTrue(method.support_tokenization)
+        compatible = self.env['payment.method']._get_compatible_payment_methods(
+            self.provider.ids, self.partner.id, force_tokenization=True,
+        )
+        self.assertIn(method, compatible)
+
     def test_saving_a_card_opens_a_setup_checkout(self):
         tx = self._create_transaction('redirect', operation='validation', amount=0.0)
         with patch(REQUEST, return_value=CHECKOUT) as api:
