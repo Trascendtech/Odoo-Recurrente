@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_token_form" model="ir.ui.view">
+        <field name="name">Recurrente Token Form</field>
+        <field name="model">payment.token</field>
+        <field name="inherit_id" ref="payment.payment_token_form"/>
+        <field name="arch" type="xml">
+            <field name="provider_ref" position="after">
+                <field name="provider_code" invisible="1"/>
+                <field name="recurrente_card_network" invisible="provider_code != 'recurrente'"/>
+                <field name="recurrente_card_expiry" invisible="provider_code != 'recurrente'"/>
+                <field name="recurrente_customer_id" invisible="provider_code != 'recurrente'"
+                       groups="base.group_no_one"/>
+            </field>
+        </field>
+    </record>
+</odoo>

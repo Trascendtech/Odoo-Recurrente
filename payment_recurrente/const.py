@@ -17,6 +17,7 @@ PAYMENT_STATUS_MAPPING = {
         'subscription.create',
     ),
     'cancel': ('request_cancel', 'subscription.cancel', 'setup_intent.cancelled'),
+    # setup_intent.succeeded: a card saved by a setup checkout (validation), handled apart.
     'error': ('bank_transfer_intent.failed',),
 }
 
@@ -35,3 +36,7 @@ REFUND_FAILED = ('failed', 'canceled')
 
 # Open transactions younger than this are polled by the status cron.
 POLL_DAYS = 3
+
+# One-time payment statuses (charges on a saved card) that mean it was not charged; anything
+# other than these and 'paid' is left pending.
+ONE_TIME_PAYMENT_FAILED = ('failed', 'canceled', 'cancelled', 'declined')

@@ -71,9 +71,14 @@ class PaymentProvider(models.Model):
     )
 
     def _compute_feature_support_fields(self):
-        """ Override of `payment` to enable full refunds (the API refunds a whole payment). """
+        """ Override of `payment` to enable full refunds (the API refunds a whole payment) and
+        tokenization: the card is saved with a checkout in setup mode and later payments are
+        one-time payments on it, without the customer. """
         super()._compute_feature_support_fields()
-        self.filtered(lambda p: p.code == 'recurrente').update({'support_refund': 'full_only'})
+        self.filtered(lambda p: p.code == 'recurrente').update({
+            'support_refund': 'full_only',
+            'support_tokenization': True,
+        })
 
     def _recurrente_verify_signature(self, headers, body):
         """ Verify a webhook signature (Svix scheme used by Recurrente).
@@ -110,12 +115,20 @@ class PaymentProvider(models.Model):
 
     @api.model
     def _get_compatible_providers(self, *args, is_validation=False, **kwargs):
-        """ Override of `payment` to filter out Recurrente providers for validation operations. """
+        """ Override of `payment`: saving a card (validation) only with Recurrente providers that
+        allow tokenization; the card is saved by a checkout in setup mode (nothing charged). """
         providers = super()._get_compatible_providers(*args, is_validation=is_validation, **kwargs)
 
         if is_validation:
-            providers = providers.filtered(lambda p: p.code != 'recurrente')
+            providers = providers.filtered(lambda p: p.code != 'recurrente' or p.allow_tokenization)
         return providers
+
+    def _get_validation_amount(self):
+        """ Override of `payment`: the setup checkout charges nothing. """
+        res = super()._get_validation_amount()
+        if self.code != 'recurrente':
+            return res
+        return 0.0
 
     def _get_supported_currencies(self):
         """ Override of `payment` to return the supported currencies. """

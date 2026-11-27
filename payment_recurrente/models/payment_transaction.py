@@ -58,32 +58,29 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'recurrente':
             return res
 
-        # Prepare the payload for checkout creation
-        parts = self.reference.split("/")
-        year = parts[1]
-        seq = parts[2].split('-')[0]  # Remove retry suffix like -1, -2
-        correlative = year + seq
-        number = int(correlative)
-
-        # Build items array as per API
-        items = [{
-            'name': self.reference,  # Use reference as item name
-            'currency': self.currency_id.name,
-            'amount_in_cents': int(self.amount * 100),  # Convert to cents
-            'quantity': 1,
-        }]
-
         payload = {
-            'items': items,
             'success_url': f"{self.get_base_url()}{RecurrenteController._request_url}?tx_ref={self.reference}&status=request_success",
             'cancel_url': f"{self.get_base_url()}{RecurrenteController._request_url}?tx_ref={self.reference}&status=request_cancel",
         }
-
-        # Add metadata if needed
-        payload['metadata'] = {
-            'correlative': correlative,
-            'number': number,
-        }
+        if self.operation == 'validation':
+            # Save the card without charging it: Recurrente authorizes zero and returns the
+            # payment method (pay_m_…) that later one-time payments charge.
+            payload['mode'] = 'setup'
+        else:
+            if self.tokenize:
+                # Only a setup checkout is known to give a card for later charges: the card is
+                # saved from "Payment methods" (validation), not while paying.
+                _logger.info("Recurrente: %s pays without saving the card.", self.reference)
+                self.tokenize = False
+            payload['items'] = [{
+                'name': self.reference,
+                'currency': self.currency_id.name,
+                'amount_in_cents': payment_utils.to_minor_currency_units(
+                    self.amount, self.currency_id
+                ),
+                'quantity': 1,
+            }]
+        payload['metadata'] = self._recurrente_reference_metadata()
 
         payment_link_data = self.provider_id._recurrente_make_request('checkouts', payload=payload)
 
@@ -95,6 +92,17 @@ class PaymentTransaction(models.Model):
             'api_url': payment_link_data['checkout_url'],
         }
         return rendering_values
+
+    def _recurrente_reference_metadata(self):
+        """ ``correlative`` and ``number`` of references like INV/2026/00012-1 (the year and the
+        sequence); empty for other references (card validations, sales orders). """
+        parts = self.reference.split("/")
+        if len(parts) < 3:
+            return {}
+        correlative = parts[1] + parts[2].split('-')[0]  # without the retry suffix (-1, -2)
+        if not correlative.isdigit():
+            return {}
+        return {'correlative': correlative, 'number': int(correlative)}
 
     def _get_tx_return_data(self, notification_data):
         """ Find the transaction based on the request data.
@@ -187,6 +195,15 @@ class PaymentTransaction(models.Model):
         self.ensure_one()
 
         payment = notification_data.get("payment")
+        payment_status = notification_data['event_type'].lower()
+        if payment_status.startswith('setup_intent.'):
+            # A card saved (or not) by a setup checkout: the checkout says which card.
+            if payment_status in const.PAYMENT_STATUS_MAPPING['cancel']:
+                if self.state in ('draft', 'pending'):
+                    self._set_canceled(_("Recurrente could not verify the card."))
+            else:
+                self.action_check_payment_status()
+            return
 
         payment_id = payment.get("id") if payment else False
         if not payment_id:
@@ -212,7 +229,6 @@ class PaymentTransaction(models.Model):
             self.recurrente_vat_withheld = float(vat_cents) / 100.0
 
         # Update the payment state.
-        payment_status = notification_data['event_type'].lower()
         failure_reason = notification_data.get('failure_reason', 'No reason.')
         if payment_status in const.PAYMENT_STATUS_MAPPING['pending']:
             if self.state == "draft":
@@ -310,7 +326,12 @@ class PaymentTransaction(models.Model):
                 payment_info = checkout_data.get("payment")
                 if isinstance(payment_info, dict) and payment_info.get("id"):
                     self.provider_reference = payment_info.get("id")
-                self._recurrente_apply_intent(self._recurrente_intent_from_checkout(checkout_data))
+                if self.operation == 'validation':
+                    self._recurrente_tokenize(checkout_data)
+                else:
+                    self._recurrente_apply_intent(
+                        self._recurrente_intent_from_checkout(checkout_data)
+                    )
 
                 self._set_done()
             elif status == "unpaid":
@@ -417,6 +438,94 @@ class PaymentTransaction(models.Model):
                 return None
             self._recurrente_apply_intent(self._recurrente_intent_from_checkout(checkout))
         return self.recurrente_intent_id
+
+    # === TOKENS === #
+
+    def _recurrente_tokenize(self, checkout_data):
+        """ Save the card of a paid setup checkout as a token of the customer: only the
+        payment method reference (pay_m_…), its last 4 digits, network and expiry. """
+        self.ensure_one()
+        method = (checkout_data or {}).get('payment_method') or {}
+        method_id = method.get('id') if isinstance(method, dict) else None
+        if not (isinstance(method_id, str) and method_id.startswith('pay_m_')):
+            _logger.warning("Recurrente: checkout of %s has no saved card.", self.reference)
+            return self.env['payment.token']
+        card = method.get('card') or {}
+        intent = checkout_data.get('latest_intent') or {}
+        customer = intent.get('customer') if isinstance(intent, dict) else None
+        if isinstance(customer, dict):
+            customer = customer.get('id')
+        expiry = ""
+        if card.get('expiration_month') and card.get('expiration_year'):
+            expiry = f"{int(card['expiration_month']):02d}/{card['expiration_year']}"
+        Token = self.env['payment.token'].sudo()
+        token = Token.search([
+            ('provider_id', '=', self.provider_id.id),
+            ('partner_id', '=', self.partner_id.id),
+            ('provider_ref', '=', method_id),
+        ], limit=1)
+        if not token:
+            token = Token.create({
+                'provider_id': self.provider_id.id,
+                'payment_method_id': self.payment_method_id.id,
+                'partner_id': self.partner_id.id,
+                'provider_ref': method_id,
+                'payment_details': card.get('last4') or '',
+                'recurrente_customer_id': customer if isinstance(customer, str) else False,
+                'recurrente_card_network': card.get('network') or False,
+                'recurrente_card_expiry': expiry or False,
+            })
+            _logger.info("Recurrente: card saved as token %s for %s.", token.id, self.reference)
+        self.token_id = token
+        return token
+
+    def _send_payment_request(self):
+        """ Override of `payment` to charge a saved card: a one-time payment on its payment
+        method, without the customer. The transaction reference is the idempotency key, so a
+        repeated request never charges twice. """
+        super()._send_payment_request()
+        if self.provider_code != 'recurrente':
+            return
+        if not self.token_id:
+            raise UserError("Recurrente: " + _("The transaction is not linked to a token."))
+        payload = {
+            'payment_method_id': self.token_id.provider_ref,
+            'items': [{
+                'name': self.reference,
+                'currency': self.currency_id.name,
+                'amount_in_cents': payment_utils.to_minor_currency_units(
+                    self.amount, self.currency_id
+                ),
+                'quantity': 1,
+            }],
+        }
+        try:
+            data = self.provider_id._recurrente_make_request(
+                'one_time_payments', payload=payload,
+                headers={'Idempotency-Key': f"odoo-{self.reference}"},
+            )
+        except ValidationError as error:
+            # Declined card, card of another customer, disputed card, 3DS required...: the
+            # payment failed; the invoice keeps its payment link (dunning).
+            self._save_failure_reason(str(error))
+            self._set_error(str(error))
+            return
+        self._recurrente_apply_one_time_payment(data)
+
+    def _recurrente_apply_one_time_payment(self, data):
+        self.ensure_one()
+        if data.get('id'):
+            self.provider_reference = data['id']
+        status = (data.get('status') or '').lower()
+        if status == 'paid':
+            self._set_done()
+        elif status in const.ONE_TIME_PAYMENT_FAILED:
+            self._set_error(_("Recurrente did not charge the card (status %s).", status))
+        else:
+            # Not documented by Recurrente: left pending, never taken as paid.
+            _logger.warning("Recurrente: one-time payment %s of %s is %r.",
+                            data.get('id'), self.reference, status)
+            self._set_pending(_("Recurrente has not confirmed the payment yet."))
 
     # === REFUNDS === #
 
