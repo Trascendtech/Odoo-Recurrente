@@ -426,9 +426,43 @@ class PaymentTransaction(models.Model):
         if details.get('vat_withheld') is not None:
             self.recurrente_vat_withheld = float(details['vat_withheld']) / 100.0
 
-    def _recurrente_fetch_intent(self):
-        """ The payment intent of the checkout, read from the API when it was not stored. """
+    def _recurrente_find_payment_intent(self, payment_id):
+        """ Intent (in_…) of a one-time payment (on_…): the intent whose
+        ``payment.paymentable.id`` is the payment, in the newest intents (GET /intents is
+        sorted by date and has no filter; a charge is looked up right after it is made). Never
+        blocks the payment: ``None`` when it cannot be found. """
         self.ensure_one()
+        if not (isinstance(payment_id, str) and payment_id.startswith('on_')):
+            return None
+        for page in range(1, const.INTENT_SEARCH_PAGES + 1):
+            try:
+                intents = self.provider_id._recurrente_make_request(
+                    'intents', payload={'page': page, 'items': const.INTENT_PAGE_SIZE},
+                    method='GET',
+                )
+            except ValidationError:
+                _logger.warning("Recurrente: could not list intents for %s", self.reference)
+                return None
+            if not isinstance(intents, list) or not intents:
+                return None
+            for intent in intents:
+                payment = intent.get('payment') if isinstance(intent, dict) else None
+                paymentable = payment.get('paymentable') if isinstance(payment, dict) else None
+                if isinstance(paymentable, dict) and paymentable.get('id') == payment_id:
+                    intent_id = intent.get('id')
+                    if isinstance(intent_id, str) and intent_id.startswith('in_'):
+                        return intent_id
+        _logger.warning("Recurrente: no intent found for one-time payment %s (%s).",
+                        payment_id, self.reference)
+        return None
+
+    def _recurrente_fetch_intent(self):
+        """ The payment intent of the transaction, read from the API when it was not stored:
+        from its checkout, or, for a charge on a saved card, from its one-time payment. """
+        self.ensure_one()
+        if (not self.recurrente_intent_id and not self.id_recurrente_checkout
+                and (self.provider_reference or '').startswith('on_')):
+            self._recurrente_apply_intent(self._recurrente_find_payment_intent(self.provider_reference))
         if not self.recurrente_intent_id and self.id_recurrente_checkout:
             try:
                 checkout = self.provider_id._recurrente_make_request(
@@ -518,6 +552,9 @@ class PaymentTransaction(models.Model):
             self.provider_reference = data['id']
         status = (data.get('status') or '').lower()
         if status == 'paid':
+            # The intent gives the fee and the VAT withheld (booked by _create_payment) and is
+            # what refunds need; the response of the one-time payment does not include it.
+            self._recurrente_apply_intent(self._recurrente_find_payment_intent(data.get('id')))
             self._set_done()
         elif status in const.ONE_TIME_PAYMENT_FAILED:
             self._set_error(_("Recurrente did not charge the card (status %s).", status))

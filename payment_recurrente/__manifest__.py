@@ -1,6 +1,6 @@
 {
     'name': 'Payment Provider: Recurrente',
-    'version': '18.0.1.3.0',
+    'version': '18.0.1.4.0',
     'category': 'Accounting/Payment Providers',
     'summary': "Integration with Recurrente payment gateway.",
     'depends': ['payment', 'account_payment'],

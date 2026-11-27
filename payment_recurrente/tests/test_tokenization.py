@@ -115,9 +115,9 @@ class TestRecurrenteTokenization(RecurrenteApiCommon):
         answer = {'object': 'one_time_payment', 'id': 'on_test1', 'status': 'paid'}
         with patch(REQUEST, return_value=answer) as api:
             tx._send_payment_request()
-        endpoint = api.call_args.args[0]
-        payload, headers = api.call_args.kwargs['payload'], api.call_args.kwargs['headers']
-        self.assertEqual(endpoint, 'one_time_payments')
+        charge = [c for c in api.call_args_list if c.args[0] == 'one_time_payments']
+        self.assertEqual(len(charge), 1, "charged once")
+        payload, headers = charge[0].kwargs['payload'], charge[0].kwargs['headers']
         self.assertEqual(payload['payment_method_id'], 'pay_m_test4242')
         self.assertEqual(payload['items'][0]['amount_in_cents'], 111750)
         self.assertEqual(headers['Idempotency-Key'], f"odoo-{tx.reference}")

@@ -40,3 +40,7 @@ POLL_DAYS = 3
 # One-time payment statuses (charges on a saved card) that mean it was not charged; anything
 # other than these and 'paid' is left pending.
 ONE_TIME_PAYMENT_FAILED = ('failed', 'canceled', 'cancelled', 'declined')
+
+# GET /intents (newest first) is searched for the intent of a one-time payment (no filter).
+INTENT_PAGE_SIZE = 50
+INTENT_SEARCH_PAGES = 4
