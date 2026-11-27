@@ -1,6 +1,6 @@
 {
     'name': 'Payment Provider: Recurrente',
-    'version': '18.0.1.2.0',
+    'version': '18.0.1.3.0',
     'category': 'Accounting/Payment Providers',
     'summary': "Integration with Recurrente payment gateway.",
     'depends': ['payment', 'account_payment'],
@@ -14,6 +14,7 @@
         'data/payment_recurrente_data.xml',
         'views/payment_provider_views.xml',
         'views/payment_transaction_view.xml',
+        'views/payment_token_views.xml',
     ],
     'post_init_hook': 'post_init_hook',
     'uninstall_hook': 'uninstall_hook',

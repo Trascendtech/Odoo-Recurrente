@@ -1,2 +1,1 @@
-from . import test_fee_accounting
-from . import test_recurrente_api
+from . import test_fee_accounting, test_recurrente_api, test_tokenization

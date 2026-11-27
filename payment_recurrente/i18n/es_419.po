@@ -3,18 +3,18 @@
 # 	* payment_recurrente
 #
 msgid ""
-msgstr "Project-Id-Version: Odoo Server 17.0-20240624\nReport-Msgid-Bugs-To: \nPOT-Creation-Date: 2024-07-16 01:34+0000\nPO-Revision-Date: 2024-07-16 01:34+0000\nLast-Translator: \nLanguage-Team: \nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: \nPlural-Forms: \n"
+msgstr ""
 "Project-Id-Version: Odoo Server 18.0-20261112\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-19 15:18+0000\n"
 "PO-Revision-Date: 2026-11-19 15:18+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: es_419\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
-"Language: es_419\n"
 
 #. module: payment_recurrente
 #: model:ir.model.fields,help:payment_recurrente.field_payment_provider__recurrente_vat_withholding_account_id
@@ -45,6 +45,16 @@ msgstr "Permitir transferencias"
 #: model_terms:ir.ui.view,arch_db:payment_recurrente.view_recurrente_payment_provider_form
 msgid "Allow Transfers / Installments"
 msgstr "Permitir transferencias / cuotas"
+
+#. module: payment_recurrente
+#: model:ir.model.fields,field_description:payment_recurrente.field_payment_token__recurrente_card_expiry
+msgid "Card Expiry"
+msgstr "Vencimiento de la tarjeta"
+
+#. module: payment_recurrente
+#: model:ir.model.fields,field_description:payment_recurrente.field_payment_token__recurrente_card_network
+msgid "Card Network"
+msgstr "Red de la tarjeta"
 
 #. module: payment_recurrente
 #. odoo-python
@@ -84,6 +94,11 @@ msgid "Created on"
 msgstr "Creado el"
 
 #. module: payment_recurrente
+#: model:ir.model.fields,help:payment_recurrente.field_payment_token__recurrente_customer_id
+msgid "Customer (cus_…) Recurrente created when the card was saved."
+msgstr "Cliente (cus_…) que Recurrente creó al guardar la tarjeta."
+
+#. module: payment_recurrente
 #: model:ir.model.fields,field_description:payment_recurrente.field_payment_transaction__recurrente_refunded_to_account
 msgid "Debited from Recurrente Account"
 msgstr "Debitado de la cuenta de Recurrente"
@@ -108,7 +123,9 @@ msgstr "Gasto por Comisión"
 msgid ""
 "Here you can find the multiple reasons why the client did have payment "
 "problems."
-msgstr "Aquí se encuentran los motivos por los que el cliente tuvo problemas con el pago."
+msgstr ""
+"Aquí se encuentran los motivos por los que el cliente tuvo problemas con el "
+"pago."
 
 #. module: payment_recurrente
 #: model_terms:ir.ui.view,arch_db:payment_recurrente.view_recurrente_payment_provider_form
@@ -142,15 +159,30 @@ msgid "Last Updated on"
 msgstr "Última actualización el"
 
 #. module: payment_recurrente
+#: model:ir.model.fields,help:payment_recurrente.field_payment_token__recurrente_card_expiry
+msgid "MM/YYYY, to warn before the card expires."
+msgstr "MM/AAAA, para avisar antes de que la tarjeta venza."
+
+#. module: payment_recurrente
 #: model:ir.model.fields,field_description:payment_recurrente.field_payment_installment_recurrente__name
 msgid "Name"
 msgstr "Nombre"
 
 #. module: payment_recurrente
+#: model:ir.model.fields,help:payment_recurrente.field_payment_provider__recurrente_public_key
+msgid ""
+"Only for old integrations: the Recurrente API now authenticates with the "
+"secret key alone (X-SECRET-KEY)."
+msgstr ""
+"Solo para integraciones antiguas: la API de Recurrente ahora se autentica "
+"solo con la llave secreta (X-SECRET-KEY)."
+
+#. module: payment_recurrente
 #: model:ir.model.fields,help:payment_recurrente.field_payment_provider__recurrente_vat_withholding_partner_id
 msgid ""
 "Partner used for the VAT withholding line (e.g. SAT or Recurrente S.A.)."
-msgstr "Contacto para la línea de retención de IVA (p. ej. SAT o Recurrente S.A.)."
+msgstr ""
+"Contacto para la línea de retención de IVA (p. ej. SAT o Recurrente S.A.)."
 
 #. module: payment_recurrente
 #: model:ir.model.fields,help:payment_recurrente.field_payment_provider__recurrente_commission_partner_id
@@ -173,9 +205,23 @@ msgid "Payment Provider"
 msgstr "Proveedor de pago"
 
 #. module: payment_recurrente
+#: model:ir.model,name:payment_recurrente.model_payment_token
+msgid "Payment Token"
+msgstr "Token de pago"
+
+#. module: payment_recurrente
 #: model:ir.model,name:payment_recurrente.model_payment_transaction
 msgid "Payment Transaction"
 msgstr "Transacción de pago"
+
+#. module: payment_recurrente
+#: model:ir.model.fields,help:payment_recurrente.field_payment_transaction__recurrente_intent_id
+msgid ""
+"Payment intent (in_…) of the paid checkout: refunds and the fee details use "
+"it."
+msgstr ""
+"Intento de pago (in_…) del checkout pagado: lo usan los reembolsos y el "
+"detalle de comisiones."
 
 #. module: payment_recurrente
 #. odoo-python
@@ -222,9 +268,19 @@ msgid "Recurrente Commission Partner"
 msgstr "Contacto de comisión de Recurrente"
 
 #. module: payment_recurrente
+#: model:ir.model.fields,field_description:payment_recurrente.field_payment_token__recurrente_customer_id
+msgid "Recurrente Customer"
+msgstr "Cliente de Recurrente"
+
+#. module: payment_recurrente
 #: model:ir.model.fields,field_description:payment_recurrente.field_payment_transaction__recurrente_fee
 msgid "Recurrente Fee"
 msgstr "Comisión de Recurrente"
+
+#. module: payment_recurrente
+#: model:ir.model.fields,field_description:payment_recurrente.field_payment_transaction__recurrente_intent_id
+msgid "Recurrente Intent ID"
+msgstr "ID del intento de Recurrente"
 
 #. module: payment_recurrente
 #: model:ir.model.fields,field_description:payment_recurrente.field_payment_provider__recurrente_public_key
@@ -264,8 +320,26 @@ msgstr "Secreto de firma del webhook de Recurrente"
 #. module: payment_recurrente
 #. odoo-python
 #: code:addons/payment_recurrente/models/payment_transaction.py:0
+msgid "Recurrente could not verify the card."
+msgstr "Recurrente no pudo verificar la tarjeta."
+
+#. module: payment_recurrente
+#. odoo-python
+#: code:addons/payment_recurrente/models/payment_transaction.py:0
+msgid "Recurrente did not charge the card (status %s)."
+msgstr "Recurrente no cobró la tarjeta (estado %s)."
+
+#. module: payment_recurrente
+#. odoo-python
+#: code:addons/payment_recurrente/models/payment_transaction.py:0
 msgid "Recurrente gateway fee - %s"
 msgstr "Comisión pasarela Recurrente - %s"
+
+#. module: payment_recurrente
+#. odoo-python
+#: code:addons/payment_recurrente/models/payment_transaction.py:0
+msgid "Recurrente has not confirmed the payment yet."
+msgstr "Recurrente todavía no confirma el pago."
 
 #. module: payment_recurrente
 #. odoo-python
@@ -289,7 +363,9 @@ msgstr "Recurrente: consultar pagos y reembolsos abiertos"
 msgid ""
 "Refunds: amount Recurrente took from the merchant balance (may differ from "
 "the amount returned to the customer because of fees)."
-msgstr "Reembolsos: monto que Recurrente descontó del saldo del comercio (puede diferir del monto devuelto al cliente por las comisiones)."
+msgstr ""
+"Reembolsos: monto que Recurrente descontó del saldo del comercio (puede "
+"diferir del monto devuelto al cliente por las comisiones)."
 
 #. module: payment_recurrente
 #: model:ir.model.fields,help:payment_recurrente.field_payment_provider__recurrente_webhook_secret
@@ -297,7 +373,10 @@ msgid ""
 "Signing secret of the webhook endpoint (starts with 'whsec_'). When set, "
 "webhooks without a valid signature are rejected. Payments are always "
 "confirmed against the API before being marked as paid."
-msgstr "Secreto de firma del endpoint del webhook (empieza con 'whsec_'). Si se configura, se rechazan los webhooks sin firma válida. Los pagos siempre se confirman con la API antes de marcarse como pagados."
+msgstr ""
+"Secreto de firma del endpoint del webhook (empieza con 'whsec_'). Si se "
+"configura, se rechazan los webhooks sin firma válida. Los pagos siempre se "
+"confirman con la API antes de marcarse como pagados."
 
 #. module: payment_recurrente
 #: model:ir.model.fields,help:payment_recurrente.field_payment_transaction__recurrente_vat_withheld
@@ -316,7 +395,8 @@ msgstr "El cliente regresó del checkout de Recurrente."
 msgid ""
 "The communication with the API failed. Recurrente gave us the following "
 "information: '%s'"
-msgstr "Falló la comunicación con la API. Recurrente indicó lo siguiente: '%s'"
+msgstr ""
+"Falló la comunicación con la API. Recurrente indicó lo siguiente: '%s'"
 
 #. module: payment_recurrente
 #: model:ir.model.fields,help:payment_recurrente.field_payment_transaction__recurrente_fee
@@ -338,9 +418,17 @@ msgstr "El código técnico de este proveedor de pagos."
 #. odoo-python
 #: code:addons/payment_recurrente/models/payment_transaction.py:0
 msgid ""
-"The transaction %s has no Recurrente payment id: it cannot be refunded from "
-"Odoo."
-msgstr "La transacción %s no tiene ID de pago de Recurrente: no se puede reembolsar desde Odoo."
+"The transaction %s has no Recurrente payment intent: it cannot be refunded "
+"from Odoo."
+msgstr ""
+"La transacción %s no tiene intento de pago de Recurrente: no se puede "
+"reembolsar desde Odoo."
+
+#. module: payment_recurrente
+#. odoo-python
+#: code:addons/payment_recurrente/models/payment_transaction.py:0
+msgid "The transaction is not linked to a token."
+msgstr "La transacción no está ligada a un token."
 
 #. module: payment_recurrente
 #: model_terms:payment.provider,auth_msg:payment_recurrente.payment_provider_recurrente
@@ -356,12 +444,18 @@ msgstr "Su pago ha sido cancelado."
 #: model_terms:payment.provider,pending_msg:payment_recurrente.payment_provider_recurrente
 msgid ""
 "Your payment has been successfully processed but is waiting for approval."
-msgstr "Su pago fue procesado correctamente pero está pendiente de aprobación."
+msgstr ""
+"Su pago fue procesado correctamente pero está pendiente de aprobación."
 
 #. module: payment_recurrente
 #: model_terms:payment.provider,done_msg:payment_recurrente.payment_provider_recurrente
 msgid "Your payment has been successfully processed."
 msgstr "Su pago fue procesado correctamente."
+
+#. module: payment_recurrente
+#: model_terms:ir.ui.view,arch_db:payment_recurrente.view_recurrente_payment_provider_form
+msgid "sk_live_... / sk_test_..."
+msgstr "sk_live_... / sk_test_..."
 
 #. module: payment_recurrente
 #: model_terms:ir.ui.view,arch_db:payment_recurrente.view_recurrente_payment_provider_form
